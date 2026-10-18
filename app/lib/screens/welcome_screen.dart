@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/platter_theme.dart';
+import '../widgets/crayon.dart';
 import '../widgets/paper_grid.dart';
 import '../widgets/primary_button.dart';
 
@@ -94,12 +95,14 @@ class _FloatingArtState extends State<_FloatingArt>
         animation: offset,
         builder: (context, child) =>
             Transform.translate(offset: offset.value, child: child),
-        child: SvgPicture.asset(
-          'assets/illustrations/welcome_calendar.svg',
-          fit: BoxFit.contain,
-          semanticsLabel:
-              'A month calendar filled with little meal photos, with Doughtie '
-              'the donut peeking over the top corner',
+        child: Crayon(
+          child: SvgPicture.asset(
+            'assets/illustrations/welcome_calendar.svg',
+            fit: BoxFit.contain,
+            semanticsLabel:
+                'A month calendar filled with little meal photos, with '
+                'Doughtie the donut peeking over the top corner',
+          ),
         ),
       ),
     );

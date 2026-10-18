@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/platter_theme.dart';
+import 'crayon.dart';
 
 /// Chunky blue button with a hard ink drop-shadow that presses down on tap
 /// (`.btn.primary` in the mockup).
@@ -21,9 +22,16 @@ class _PrimaryButtonState extends State<PrimaryButton> {
     if (widget.onPressed != null) setState(() => _pressed = value);
   }
 
+  static const _maxShadow = 4.0;
+
+  /// Room around the crayon layer so its wobble isn't clipped at the edges.
+  static const _bleed = 4.0;
+
   @override
   Widget build(BuildContext context) {
     final enabled = widget.onPressed != null;
+    final shadow = _pressed ? 1.0 : _maxShadow;
+    final radius = BorderRadius.circular(16);
     return Semantics(
       button: true,
       enabled: enabled,
@@ -35,24 +43,62 @@ class _PrimaryButtonState extends State<PrimaryButton> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 80),
           transform: Matrix4.translationValues(0, _pressed ? 3 : 0, 0),
-          constraints: const BoxConstraints(minHeight: 56),
-          width: double.infinity,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: enabled ? PlatterColors.blue : const Color(0xFFB9C4DA),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: PlatterColors.ink, width: 2.5),
-            boxShadow: [
-              BoxShadow(
-                color: PlatterColors.ink,
-                offset: Offset(0, _pressed ? 1 : 4),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              // Fill, border and drop-shadow get the crayon texture; the
+              // label sits above it so it stays crisp (`.sk::before`).
+              Positioned(
+                left: -_bleed,
+                top: -_bleed,
+                right: -_bleed,
+                bottom: -_bleed - _maxShadow,
+                child: Crayon(
+                  child: Padding(
+                    padding: const EdgeInsets.all(_bleed),
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          top: shadow,
+                          bottom: _maxShadow - shadow,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: PlatterColors.ink,
+                              borderRadius: radius,
+                            ),
+                          ),
+                        ),
+                        Positioned.fill(
+                          bottom: _maxShadow,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: enabled
+                                  ? PlatterColors.blue
+                                  : const Color(0xFFB9C4DA),
+                              borderRadius: radius,
+                              border: Border.all(
+                                color: PlatterColors.ink,
+                                width: 2.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                constraints: const BoxConstraints(minHeight: 56),
+                width: double.infinity,
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(
+                  widget.label,
+                  style: PlatterText.head(size: 19, color: Colors.white),
+                ),
               ),
             ],
-          ),
-          child: Text(
-            widget.label,
-            style: PlatterText.head(size: 19, color: Colors.white),
           ),
         ),
       ),

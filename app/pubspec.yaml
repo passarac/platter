@@ -60,6 +60,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  shaders:
+    - shaders/crayon.frag
+
   assets:
     - assets/illustrations/
 

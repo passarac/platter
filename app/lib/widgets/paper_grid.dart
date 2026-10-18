@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/platter_theme.dart';
+import 'crayon.dart';
 
 /// Yellow graph-paper background used on the onboarding screens
 /// (`.paper-grid` in the mockup).
@@ -11,9 +12,20 @@ class PaperGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: const _GridPainter(),
-      child: child,
+    return ClipRect(
+      child: Stack(
+        children: [
+          // Bleeds past the edges so the crayon wobble never shows a border.
+          const Positioned(
+            left: -8,
+            top: -8,
+            right: -8,
+            bottom: -8,
+            child: Crayon(child: CustomPaint(painter: _GridPainter())),
+          ),
+          Positioned.fill(child: child),
+        ],
+      ),
     );
   }
 }
