@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 120 120">
+  <title>Platter app icon – Fork p</title>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <rect x="0" y="0" width="120" height="120" rx="27" fill="#1F2A44"/>
+    <path d="M36 20 v20 M44 20 v20 M52 20 v20 M36 40 q0 8 8 8 q8 0 8 -8" fill="none" stroke="#FFE07A" stroke-width="5.5"/>
+    <path d="M44 48 V102" stroke="#FFE07A" stroke-width="11"/>
+    <circle cx="70" cy="62" r="24" fill="#FFE07A" stroke="#FFE07A" stroke-width="4"/>
+    <circle cx="70" cy="62" r="14" fill="#FFFDF6"/>
+    <circle cx="70" cy="62" r="14" fill="none" stroke="#2F5FD0" stroke-width="3"/>
+  </g>
+</svg>
