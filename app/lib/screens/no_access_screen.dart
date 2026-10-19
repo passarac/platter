@@ -6,6 +6,7 @@ import '../theme/platter_theme.dart';
 import '../widgets/crayon.dart';
 import '../widgets/onboarding_page.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/settings_prompt.dart';
 
 /// Shown when photo access is denied: offers Settings, or an empty calendar.
 class NoAccessScreen extends StatefulWidget {
@@ -53,6 +54,15 @@ class _NoAccessScreenState extends State<NoAccessScreen>
     }
   }
 
+  Future<void> _allowAccess() async {
+    final go = await askToOpenSettings(
+      context,
+      title: 'Allow photo access in Settings',
+      want: PhotoAccess.full,
+    );
+    if (go) await widget.library.openSettings();
+  }
+
   @override
   Widget build(BuildContext context) {
     return OnboardingPage(
@@ -82,7 +92,7 @@ class _NoAccessScreenState extends State<NoAccessScreen>
         const SizedBox(height: 28),
         PrimaryButton(
           label: 'Allow access in Settings',
-          onPressed: widget.library.openSettings,
+          onPressed: _allowAccess,
         ),
         const SizedBox(height: 10),
         SecondaryButton(

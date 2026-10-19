@@ -91,6 +91,7 @@ button:disabled{cursor:default}
 .fine{margin:0;font-size:14px;line-height:1.4;color:var(--ink-3)}
 .body-pad{flex:1;padding:6px 28px 34px;display:flex;flex-direction:column;gap:12px}
 .actions{margin-top:auto;display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.link-row{display:flex;flex-wrap:wrap;justify-content:space-evenly;column-gap:16px}
 
 /* ---------- Welcome ---------- */
 .wordmark{padding:52px 28px 0;text-align:center;font-family:var(--head);font-size:22px;font-weight:800;letter-spacing:-.01em}
@@ -1138,6 +1139,9 @@ button.arow:hover{background:rgba(31,42,68,.06)}
 .ios-alert button{display:block;width:100%;height:44px;border-top:.5px solid rgba(60,60,67,.36);color:#007AFF;font-size:17px;font-family:var(--ios)}
 .ios-alert button:active{background:rgba(0,0,0,.06)}
 .ios-alert button.bold{font-weight:600}
+.ios-alert .pair{display:flex}
+.ios-alert .pair button{flex:1}
+.ios-alert .pair button + button{border-left:.5px solid rgba(60,60,67,.36)}
 .ios-alert button:focus-visible,.picker button:focus-visible{outline-offset:-3px;border-radius:4px}
 
 /* iOS photo picker sheet */
@@ -1227,6 +1231,7 @@ button.arow:hover{background:rgba(31,42,68,.06)}
         <li class="branch"><button data-jump="picker">Pick selected photos</button></li>
         <li class="branch"><button data-jump="limited">Just your selected photos</button></li>
         <li class="branch"><button data-jump="denied">No photo access</button></li>
+        <li class="branch"><button data-jump="go-settings">Change access in Settings</button></li>
         <li><button data-jump="scan"><span class="n">3</span>Scanning</button></li>
         <li><button data-jump="reveal"><span class="n">4</span>Calendar reveal</button></li>
         <li><button data-jump="local"><span class="n">5</span>Stays on this phone</button></li>
@@ -1308,7 +1313,10 @@ button.arow:hover{background:rgba(31,42,68,.06)}
               <p class="lede">Your calendar will only contain the photos you've selected. You can widen access anytime in Settings.</p>
               <div class="actions">
                 <button class="btn primary sk" data-act="scan">Continue</button>
-                <button class="link" data-act="open-picker">Change selection</button>
+                <div class="link-row">
+                  <button class="link" data-act="open-picker">Change selection</button>
+                  <button class="link" data-act="settings-allow">Allow all photos</button>
+                </div>
               </div>
             </div>
           </section>
@@ -1435,6 +1443,17 @@ button.arow:hover{background:rgba(31,42,68,.06)}
             <button data-act="alert-limit">Limit Access…</button>
             <button class="bold" data-act="alert-full">Allow Full Access</button>
             <button data-act="alert-deny">Don't Allow</button>
+          </div>
+
+          <div class="ios-alert" id="goSettings" role="alertdialog" aria-modal="true" aria-labelledby="goSetT" aria-describedby="goSetP">
+            <div class="msg">
+              <h3 id="goSetT"></h3>
+              <p id="goSetP"></p>
+            </div>
+            <div class="pair">
+              <button data-act="settings-cancel">Cancel</button>
+              <button class="bold" data-act="settings-go">Go to Settings</button>
+            </div>
           </div>
 
           <div class="picker" id="picker" role="dialog" aria-modal="true" aria-labelledby="pickT">
@@ -1717,7 +1736,7 @@ function openOverlay(kind){
   const scrim = $('#scrim');
   scrim.classList.toggle('ios', kind !== 'local');
   scrim.classList.add('on');
-  const el = {alert:'#alert', picker:'#picker', local:'#sheetLocal'}[kind];
+  const el = {alert:'#alert', 'go-settings':'#goSettings', picker:'#picker', local:'#sheetLocal'}[kind];
   $(el).classList.add('on');
   if (kind === 'picker') renderPicker();
   $('#statusbar').classList.toggle('light', kind === 'picker');
@@ -1726,7 +1745,7 @@ function openOverlay(kind){
   syncPanel();
 }
 function closeOverlay(silent){
-  $$('#alert,#picker,#sheetLocal,#add').forEach(e => e.classList.remove('on'));
+  $$('#alert,#goSettings,#picker,#sheetLocal,#add').forEach(e => e.classList.remove('on'));
   $('#scrim').classList.remove('on');
   $('#statusbar').classList.toggle('light', !!S.meal);
   S.overlay = null;
@@ -2285,10 +2304,30 @@ function useAccess(kind){
   S.revealed = false;
 }
 
+/* Once access is set, iOS never shows its prompt again and only Settings can
+   change it, so Platter says what to tap there first (askToOpenSettings in
+   the app). `then` stands in for the trip: iOS quits Platter when access
+   changes, and Platter reopens where the user left off. */
+function askSettings(title, want, then){
+  $('#goSetT').textContent = title;
+  $('#goSetP').textContent = "Your phone only lets you change this in Settings. We'll open Platter's settings for you: tap Photos, then choose " + (want === 'full' ? 'Full Access.' : 'Limited Access.');
+  S.settingsGo = then;
+  openOverlay('go-settings');
+}
+function pretendFullAccess(){
+  toast('Pretend you allowed it in Settings', 'info');
+  useAccess('full');
+  setTimeout(() => go('scan'), 700);
+}
+function pretendLimitedAccess(){
+  toast('Pretend you chose Limited Access in Settings', 'info');
+  setTimeout(() => openOverlay('picker'), 700);
+}
+
 function reset(){
   clearInterval(S.scanTimer);
   closeOverlay(true);
-  Object.assign(S, {access:null, picked:new Set(), revealed:false, history:['welcome'], view:'month', tab:'cal', rdSeg:'surprise', surprise:null, seenSurprise:null, collsSeeded:false, userColls:[], pinned:new Set(), collFilter:'all', collQuery:'', coll:null, nc:null, wander:null, story:null, poster:false, plPeriod:'year', plMonth:null, plTrip:null, tlSize:'grid', mapCity:'World', world:null, mapSel:null, mapPan:null, mapHeat:false, mapAll:false, meal:null, editDay:null, yearMode:'home', cuisines:new Set(), cur:{...TODAY}, settings:false, remind:true, appStep:'home'});
+  Object.assign(S, {access:null, settingsGo:null, picked:new Set(), revealed:false, history:['welcome'], view:'month', tab:'cal', rdSeg:'surprise', surprise:null, seenSurprise:null, collsSeeded:false, userColls:[], pinned:new Set(), collFilter:'all', collQuery:'', coll:null, nc:null, wander:null, story:null, poster:false, plPeriod:'year', plMonth:null, plTrip:null, tlSize:'grid', mapCity:'World', world:null, mapSel:null, mapPan:null, mapHeat:false, mapAll:false, meal:null, editDay:null, yearMode:'home', cuisines:new Set(), cur:{...TODAY}, settings:false, remind:true, appStep:'home'});
   setLibrary([]);
   S.suspects = new Map(); S.editDay = null;
   $('#v-meal').classList.remove('on');
@@ -2301,8 +2340,19 @@ function reset(){
 const soon = what => () => toast(`${what} is a separate mockup`, 'info');
 const ACTIONS = {
   'restore': () => toast('Restore from Files comes later', 'info'),
-  'ask-full': () => openOverlay('alert'),
-  'ask-limited': () => openOverlay('picker'),
+  // The system prompt only shows the first time; after that, a choice that
+  // clashes with the access already set goes via Settings.
+  'ask-full': () => {
+    if (!S.access) return openOverlay('alert');
+    if (S.access === 'full') return go('scan');
+    askSettings(S.access === 'limited' ? 'Platter can only see selected photos' : 'Photo access is turned off', 'full', pretendFullAccess);
+  },
+  'ask-limited': () => {
+    if (!S.access || S.access === 'limited') return openOverlay('picker');
+    askSettings(S.access === 'full' ? 'Platter can see all your photos' : 'Photo access is turned off', 'limited', pretendLimitedAccess);
+  },
+  'settings-cancel': () => closeOverlay(),
+  'settings-go': () => { const then = S.settingsGo; S.settingsGo = null; closeOverlay(); then?.(); },
   'alert-full': () => { closeOverlay(); useAccess('full'); go('scan'); },
   'alert-limit': () => { closeOverlay(true); openOverlay('picker'); },
   'alert-deny': () => { closeOverlay(); useAccess('none'); go('denied'); },
@@ -2321,7 +2371,7 @@ const ACTIONS = {
     go('limited');
   },
   'scan': () => { useAccess('limited'); go('scan'); },
-  'settings-allow': () => { toast('Pretend you allowed it in Settings', 'info'); useAccess('full'); setTimeout(() => go('scan'), 700); },
+  'settings-allow': () => askSettings(cur() === 'denied' ? 'Allow photo access in Settings' : 'Allow all photos in Settings', 'full', pretendFullAccess),
   'empty-start': () => { useAccess('none'); S.history = ['app']; show('app'); },
   'see-calendar': () => { S.history = ['app']; show('app'); },
   'local-ok': () => { S.appStep = 'home'; closeOverlay(); setTimeout(() => toast('Saved on this phone only'), 250); },
@@ -4616,7 +4666,7 @@ document.addEventListener('click', e => {
 });
 $('#scrim').addEventListener('click', () => { if (S.overlay === 'picker') closeOverlay(); });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && (S.overlay === 'picker' || S.overlay === 'add')) return closeOverlay();
+  if (e.key === 'Escape' && ['picker', 'add', 'go-settings'].includes(S.overlay)) return closeOverlay();
   if (S.story && (e.key === 'ArrowRight' || e.key === ' ')){ e.preventDefault(); return storyGo(1); }
   if (S.story && e.key === 'ArrowLeft') return storyGo(-1);
   if (S.wander && e.key === 'ArrowRight') return wanderNext();
@@ -4647,6 +4697,7 @@ function jump(step){
     case 'picker': S.history = ['welcome','photos']; show('photos','fwd',false); openOverlay('picker'); break;
     case 'limited': DEMO_PICK.forEach(i => S.picked.add(i)); useAccess('limited'); S.history = ['welcome','photos','limited']; show('limited','fwd',false); break;
     case 'denied': useAccess('none'); S.history = ['welcome','photos','denied']; show('denied','fwd',false); break;
+    case 'go-settings': useAccess('none'); S.history = ['welcome','photos']; show('photos','fwd',false); ACTIONS['ask-full'](); break;
     case 'scan': useAccess('full'); S.history = ['welcome','photos','scan']; show('scan','fwd',false); break;
     case 'reveal': useAccess('full'); S.history = ['app']; show('app','fwd',false); break;
     case 'local': app('month'); openOverlay('local'); break;
@@ -4687,10 +4738,11 @@ function runPath(p){
 
 const NOTES = {
   welcome: '<b>Welcome.</b> Sells the calendar idea before asking for anything. "Restore" is for a local backup file, since there are no accounts.',
-  photos: '<b>Pre-permission explainer.</b> Sets up the iOS prompt so the system dialog is not a surprise. Both buttons lead to the system prompt or picker.',
+  photos: '<b>Pre-permission explainer.</b> Sets up the iOS prompt so the system dialog is not a surprise. Both buttons lead to the system prompt or picker. If access is already set to something else (say, in Settings), the button explains how to change it in Settings instead.',
+  'go-settings': '<b>Change access in Settings.</b> Once access is set, iOS never shows its prompt again, so this says what to tap in Settings before sending the user there. iOS quits Platter when access changes, and Platter reopens where the user left off.',
   alert: '<b>iOS system prompt.</b> Platter does not control this dialog. Each of the three answers leads somewhere different.',
   picker: '<b>iOS limited-library picker.</b> Tap photos to select. Non-meal photos are skipped by the scan, so the meal count can be lower than the selection.',
-  limited: '<b>Selected photos.</b> Confirms what the calendar will contain and offers a way to change the selection.',
+  limited: '<b>Selected photos.</b> Confirms what the calendar will contain, and offers a way to change the selection or allow all photos via Settings.',
   denied: '<b>Access denied.</b> A soft landing: the app still works as a manual diary.',
   scan: '<b>On-device scan.</b> Bunjamin runs while meals pop in. The button unlocks when the scan finishes. Selecting zero meal photos shows a recovery state.',
   reveal: '<b>The payoff.</b> Days fill in one by one, then the stays-on-this-phone sheet slides up.',
