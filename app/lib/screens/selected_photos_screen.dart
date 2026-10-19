@@ -193,12 +193,14 @@ class _CountPill extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label,
-                style: PlatterText.body(
-                  size: 14,
-                  weight: FontWeight.w800,
-                  color: PlatterColors.ink,
+              Flexible(
+                child: Text(
+                  label,
+                  style: PlatterText.body(
+                    size: 14,
+                    weight: FontWeight.w800,
+                    color: PlatterColors.ink,
+                  ),
                 ),
               ),
             ],
