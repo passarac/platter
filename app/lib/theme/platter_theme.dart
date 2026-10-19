@@ -62,6 +62,14 @@ ThemeData buildPlatterTheme() {
 /// Easing for screen changes (the mockup's `cubic-bezier(.2,.8,.2,1)`).
 const platterEase = Cubic(0.2, 0.8, 0.2, 1);
 
+/// [parent] eased with [platterEase] in both directions, the way CSS
+/// transitions behave. It listens to [parent], so dispose it when done.
+CurvedAnimation easeScreenChange(Animation<double> parent) => CurvedAnimation(
+  parent: parent,
+  curve: platterEase,
+  reverseCurve: platterEase.flipped,
+);
+
 /// Every screen sits on the same paper, so instead of sliding the whole page
 /// across, the new screen just fades in over the old one and the paper looks
 /// still. [PaperGrid] drifts the content on top.
@@ -78,14 +86,39 @@ class PaperPageTransitionsBuilder extends PageTransitionsBuilder {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
     Widget child,
-  ) {
-    return FadeTransition(
-      opacity: CurvedAnimation(
-        parent: animation,
-        curve: platterEase,
-        reverseCurve: platterEase.flipped,
-      ),
-      child: child,
-    );
+  ) => _PaperFade(animation: animation, child: child);
+}
+
+/// Holds the eased opacity across rebuilds and disposes it with the page.
+class _PaperFade extends StatefulWidget {
+  const _PaperFade({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  State<_PaperFade> createState() => _PaperFadeState();
+}
+
+class _PaperFadeState extends State<_PaperFade> {
+  late CurvedAnimation _opacity = easeScreenChange(widget.animation);
+
+  @override
+  void didUpdateWidget(_PaperFade oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.animation != oldWidget.animation) {
+      _opacity.dispose();
+      _opacity = easeScreenChange(widget.animation);
+    }
   }
+
+  @override
+  void dispose() {
+    _opacity.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      FadeTransition(opacity: _opacity, child: widget.child);
 }
