@@ -1,43 +1,123 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'flows/photo_access_flow.dart';
 import 'screens/find_meals_screen.dart';
 import 'screens/welcome_screen.dart';
+import 'services/onboarding_progress.dart';
 import 'services/photo_library.dart';
 import 'theme/platter_theme.dart';
 
-void main() {
-  runApp(const PlatterApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const photos = DevicePhotoLibrary();
+  const progress = SavedOnboardingProgress();
+  var resumeAt = OnboardingStep.welcome;
+  try {
+    resumeAt = await resumeStep(progress, photos);
+  } catch (error, stack) {
+    // Never let saved progress stop the app opening: report it, start over.
+    FlutterError.reportError(
+      FlutterErrorDetails(
+        exception: error,
+        stack: stack,
+        library: 'platter',
+        context: ErrorDescription('while resuming onboarding'),
+      ),
+    );
+  }
+  runApp(PlatterApp(photos: photos, progress: progress, resumeAt: resumeAt));
 }
 
-class PlatterApp extends StatelessWidget {
-  const PlatterApp({super.key, this.photos = const DevicePhotoLibrary()});
+class PlatterApp extends StatefulWidget {
+  const PlatterApp({
+    super.key,
+    required this.photos,
+    required this.progress,
+    this.resumeAt = OnboardingStep.welcome,
+  });
 
   final PhotoLibrary photos;
+  final OnboardingProgress progress;
+
+  /// Where onboarding picks up, from [resumeStep].
+  final OnboardingStep resumeAt;
+
+  @override
+  State<PlatterApp> createState() => _PlatterAppState();
+}
+
+class _PlatterAppState extends State<PlatterApp> {
+  final _navigator = GlobalKey<NavigatorState>();
+  late final _saveStep = _StepSaver(widget.progress);
+  late final _photoAccess = PhotoAccessFlow(
+    library: widget.photos,
+    progress: widget.progress,
+    onScan: (context) => _comingSoon(context, 'Scanning for meals'),
+    onEmptyCalendar: (context) => _comingSoon(context, 'The calendar'),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.resumeAt == OnboardingStep.scan) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = _navigator.currentContext;
+        if (context != null) _photoAccess.onScan(context);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _photoAccess.dispose();
+    super.dispose();
+  }
+
+  Route<void> _welcome() => onboardingRoute(
+    OnboardingStep.welcome,
+    (context) => WelcomeScreen(
+      onGetStarted: () => Navigator.of(context).push(_findMeals()),
+    ),
+  );
+
+  Route<void> _findMeals() => onboardingRoute(
+    OnboardingStep.findMeals,
+    (context) => FindMealsScreen(
+      onFullAccess: () => _photoAccess.askFull(context),
+      onSelectedPhotos: () => _photoAccess.askSelected(context),
+    ),
+  );
+
+  /// The screens up to [PlatterApp.resumeAt], so back still walks through
+  /// onboarding after a relaunch.
+  List<Route<void>> _initialRoutes(String _) {
+    final resumeAt = widget.resumeAt;
+    final next = switch (resumeAt) {
+      OnboardingStep.selectedPhotos => _photoAccess.routeFor(
+        PhotoAccess.limited,
+      ),
+      OnboardingStep.noAccess => _photoAccess.routeFor(PhotoAccess.none),
+      _ => null,
+    };
+    return [
+      _welcome(),
+      if (resumeAt != OnboardingStep.welcome) _findMeals(),
+      ?next,
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
-    final photoAccess = PhotoAccessFlow(
-      library: photos,
-      onScan: (context) => _comingSoon(context, 'Scanning for meals'),
-      onEmptyCalendar: (context) => _comingSoon(context, 'The calendar'),
-    );
     return MaterialApp(
       title: 'Platter',
       debugShowCheckedModeBanner: false,
       theme: buildPlatterTheme(),
-      home: Builder(
-        builder: (context) => WelcomeScreen(
-          onGetStarted: () => Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (context) => FindMealsScreen(
-                onFullAccess: () => photoAccess.askFull(context),
-                onSelectedPhotos: () => photoAccess.askSelected(context),
-              ),
-            ),
-          ),
-        ),
-      ),
+      navigatorKey: _navigator,
+      navigatorObservers: [_saveStep],
+      onGenerateInitialRoutes: _initialRoutes,
+      onGenerateRoute: (_) => _welcome(),
     );
   }
 
@@ -46,4 +126,29 @@ class PlatterApp extends StatelessWidget {
       ..hideCurrentSnackBar()
       ..showSnackBar(SnackBar(content: Text('$what is coming soon.')));
   }
+}
+
+/// Saves the onboarding step whenever an onboarding screen ends up on top,
+/// including going back. Dialogs and other unnamed routes are ignored.
+class _StepSaver extends NavigatorObserver {
+  _StepSaver(this.progress);
+
+  final OnboardingProgress progress;
+
+  void _save(Route<dynamic>? route) {
+    final step = OnboardingStep.values.asNameMap()[route?.settings.name];
+    if (step != null) unawaited(progress.setStep(step));
+  }
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _save(route);
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
+      _save(previousRoute);
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
+      _save(newRoute);
 }

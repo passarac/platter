@@ -8,6 +8,7 @@ import '../theme/platter_theme.dart';
 import '../widgets/crayon.dart';
 import '../widgets/onboarding_page.dart';
 import '../widgets/primary_button.dart';
+import '../widgets/settings_prompt.dart';
 
 /// Shown after the user picks "Limit Access": confirms what the calendar will
 /// contain and lets them change the selection.
@@ -79,6 +80,15 @@ class _SelectedPhotosScreenState extends State<SelectedPhotosScreen>
     await _refresh();
   }
 
+  Future<void> _allowAllPhotos() async {
+    final go = await askToOpenSettings(
+      context,
+      title: 'Allow all photos in Settings',
+      want: PhotoAccess.full,
+    );
+    if (go) await widget.library.openSettings();
+  }
+
   @override
   Widget build(BuildContext context) {
     final count = _count;
@@ -106,11 +116,15 @@ class _SelectedPhotosScreenState extends State<SelectedPhotosScreen>
           onPressed: count != null && count > 0 ? widget.onContinue : null,
         ),
         const SizedBox(height: 10),
-        Center(
-          child: TextLink(
-            label: 'Change selection',
-            onPressed: _changeSelection,
-          ),
+        // iOS only shows the access prompt once, so going from selected to
+        // all photos has to happen in Settings; _onResume picks it up.
+        Wrap(
+          alignment: WrapAlignment.spaceEvenly,
+          spacing: 16,
+          children: [
+            TextLink(label: 'Change selection', onPressed: _changeSelection),
+            TextLink(label: 'Allow all photos', onPressed: _allowAllPhotos),
+          ],
         ),
       ],
     );
