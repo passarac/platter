@@ -3,11 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:platter/main.dart';
 
+import 'fake_photo_library.dart';
+
 void main() {
   setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
 
   testWidgets('Welcome screen shows headline and actions', (tester) async {
-    await tester.pumpWidget(const PlatterApp());
+    await tester.pumpWidget(PlatterApp(photos: FakePhotoLibrary()));
 
     expect(find.text('Platter'), findsOneWidget);
     expect(find.text('Your meals, as a calendar of memories.'), findsOneWidget);
@@ -16,7 +18,7 @@ void main() {
   });
 
   testWidgets('Get started opens the find-your-meals screen', (tester) async {
-    await tester.pumpWidget(const PlatterApp());
+    await tester.pumpWidget(PlatterApp(photos: FakePhotoLibrary()));
 
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
