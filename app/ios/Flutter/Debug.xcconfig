@@ -1,1 +1,6 @@
 #include "Generated.xcconfig"
+
+// photo_manager's Swift package doesn't link PhotosUI (its podspec does), and
+// without it -[PHPhotoLibrary presentLimitedLibraryPickerFromViewController:...]
+// doesn't exist at runtime, so "Change selection" crashed.
+OTHER_LDFLAGS = $(inherited) -framework PhotosUI
