@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'screens/find_meals_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'theme/platter_theme.dart';
 
@@ -18,8 +19,15 @@ class PlatterApp extends StatelessWidget {
       theme: buildPlatterTheme(),
       home: Builder(
         builder: (context) => WelcomeScreen(
-          onGetStarted: () => _comingSoon(context, 'Photo access'),
-          onRestore: () => _comingSoon(context, 'Restore from backup'),
+          onGetStarted: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (context) => FindMealsScreen(
+                onFullAccess: () => _comingSoon(context, 'Full photo access'),
+                onSelectedPhotos: () =>
+                    _comingSoon(context, 'Selected photo access'),
+              ),
+            ),
+          ),
         ),
       ),
     );

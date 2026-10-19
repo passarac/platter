@@ -1,4 +1,3 @@
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -9,12 +8,9 @@ import '../widgets/primary_button.dart';
 
 /// Onboarding step 1: sells the calendar idea before asking for anything.
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key, this.onGetStarted, this.onRestore});
+  const WelcomeScreen({super.key, this.onGetStarted});
 
   final VoidCallback? onGetStarted;
-
-  /// Restores from a local backup file (there are no accounts).
-  final VoidCallback? onRestore;
 
   @override
   Widget build(BuildContext context) {
@@ -48,12 +44,9 @@ class WelcomeScreen extends StatelessWidget {
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(28, 32, 28, 16),
-                child: Column(
-                  children: [
-                    PrimaryButton(label: 'Get started', onPressed: onGetStarted),
-                    const SizedBox(height: 10),
-                    _RestoreLine(onRestore: onRestore),
-                  ],
+                child: PrimaryButton(
+                  label: 'Get started',
+                  onPressed: onGetStarted,
                 ),
               ),
             ],
@@ -87,9 +80,10 @@ class _FloatingArtState extends State<_FloatingArt>
 
   @override
   Widget build(BuildContext context) {
-    final offset = Tween(begin: Offset.zero, end: const Offset(0, -6)).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    final offset = Tween(
+      begin: Offset.zero,
+      end: const Offset(0, -6),
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     return Center(
       child: AnimatedBuilder(
         animation: offset,
@@ -105,36 +99,6 @@ class _FloatingArtState extends State<_FloatingArt>
           ),
         ),
       ),
-    );
-  }
-}
-
-class _RestoreLine extends StatelessWidget {
-  const _RestoreLine({this.onRestore});
-
-  final VoidCallback? onRestore;
-
-  @override
-  Widget build(BuildContext context) {
-    final base = PlatterText.body(size: 14, color: PlatterColors.ink3);
-    return Text.rich(
-      TextSpan(
-        style: base,
-        children: [
-          const TextSpan(text: 'Have a backup file? '),
-          TextSpan(
-            text: 'Restore it',
-            style: base.copyWith(
-              fontWeight: FontWeight.w800,
-              color: PlatterColors.blueInk,
-              decoration: TextDecoration.underline,
-              decorationColor: PlatterColors.blueInk,
-            ),
-            recognizer: TapGestureRecognizer()..onTap = onRestore,
-          ),
-        ],
-      ),
-      textAlign: TextAlign.center,
     );
   }
 }
