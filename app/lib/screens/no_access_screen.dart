@@ -29,6 +29,10 @@ class NoAccessScreen extends StatefulWidget {
 
 class _NoAccessScreenState extends State<NoAccessScreen>
     with WidgetsBindingObserver {
+  /// [NoAccessScreen.onAccessChanged] has fired and this screen is on its way
+  /// out; later resumes mustn't navigate again.
+  bool _leaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -48,8 +52,9 @@ class _NoAccessScreenState extends State<NoAccessScreen>
 
   Future<void> _onResume() async {
     final access = await widget.library.currentAccess();
-    if (!mounted) return;
+    if (!mounted || _leaving) return;
     if (access == PhotoAccess.full || access == PhotoAccess.limited) {
+      _leaving = true;
       widget.onAccessChanged?.call(access);
     }
   }
