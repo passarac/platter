@@ -6,6 +6,10 @@
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Platter looks through your photos on this phone to find your meals and build your calendar. Nothing leaves your device.</string>
+	<key>PHPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+	<true/>
 	<key>CFBundleDisplayName</key>
 	<string>Platter</string>
 	<key>CFBundleExecutable</key>

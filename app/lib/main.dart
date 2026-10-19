@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'flows/photo_access_flow.dart';
 import 'screens/find_meals_screen.dart';
 import 'screens/welcome_screen.dart';
+import 'services/photo_library.dart';
 import 'theme/platter_theme.dart';
 
 void main() {
@@ -9,10 +11,17 @@ void main() {
 }
 
 class PlatterApp extends StatelessWidget {
-  const PlatterApp({super.key});
+  const PlatterApp({super.key, this.photos = const DevicePhotoLibrary()});
+
+  final PhotoLibrary photos;
 
   @override
   Widget build(BuildContext context) {
+    final photoAccess = PhotoAccessFlow(
+      library: photos,
+      onScan: (context) => _comingSoon(context, 'Scanning for meals'),
+      onEmptyCalendar: (context) => _comingSoon(context, 'The calendar'),
+    );
     return MaterialApp(
       title: 'Platter',
       debugShowCheckedModeBanner: false,
@@ -22,9 +31,8 @@ class PlatterApp extends StatelessWidget {
           onGetStarted: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (context) => FindMealsScreen(
-                onFullAccess: () => _comingSoon(context, 'Full photo access'),
-                onSelectedPhotos: () =>
-                    _comingSoon(context, 'Selected photo access'),
+                onFullAccess: () => photoAccess.askFull(context),
+                onSelectedPhotos: () => photoAccess.askSelected(context),
               ),
             ),
           ),
