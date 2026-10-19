@@ -36,6 +36,13 @@ class _SelectedPhotosScreenState extends State<SelectedPhotosScreen>
   int? _count;
   List<Uint8List> _thumbs = const [];
 
+  /// The picker is open; iOS can only show one.
+  bool _picking = false;
+
+  /// [SelectedPhotosScreen.onAccessChanged] has fired and this screen is on
+  /// its way out; later resumes mustn't navigate again.
+  bool _leaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -57,10 +64,11 @@ class _SelectedPhotosScreenState extends State<SelectedPhotosScreen>
 
   Future<void> _onResume() async {
     final access = await widget.library.currentAccess();
-    if (!mounted) return;
+    if (!mounted || _leaving) return;
     if (access == PhotoAccess.limited) {
       await _refresh();
     } else {
+      _leaving = true;
       widget.onAccessChanged?.call(access);
     }
   }
@@ -76,7 +84,13 @@ class _SelectedPhotosScreenState extends State<SelectedPhotosScreen>
   }
 
   Future<void> _changeSelection() async {
-    await widget.library.changeSelection();
+    if (_picking) return;
+    _picking = true;
+    try {
+      await widget.library.changeSelection();
+    } finally {
+      _picking = false;
+    }
     await _refresh();
   }
 

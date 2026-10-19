@@ -35,6 +35,10 @@ class PhotoAccessFlow {
   /// Waits for the user to come back from Settings; see [_openSettings].
   AppLifecycleListener? _settingsReturn;
 
+  /// Set while a button's request is in flight, so a second tap (say, while
+  /// the system prompt is loading) can't ask twice and push two screens.
+  bool _asking = false;
+
   void dispose() => _settingsReturn?.dispose();
 
   /// "Full access".
@@ -69,6 +73,17 @@ class PhotoAccessFlow {
   };
 
   Future<void> _ask(BuildContext context, PhotoAccess want) async {
+    // Also ignore taps on a screen that's already on its way out.
+    if (_asking || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+    _asking = true;
+    try {
+      await _askOnce(context, want);
+    } finally {
+      _asking = false;
+    }
+  }
+
+  Future<void> _askOnce(BuildContext context, PhotoAccess want) async {
     final access = await library.currentAccess();
     if (!context.mounted) return;
     if (access == PhotoAccess.notAsked) {
