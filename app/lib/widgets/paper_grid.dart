@@ -23,7 +23,7 @@ class PaperGrid extends StatelessWidget {
             bottom: -8,
             child: Crayon(child: CustomPaint(painter: _GridPainter())),
           ),
-          Positioned.fill(child: child),
+          Positioned.fill(child: _RouteDrift(child: child)),
         ],
       ),
     );
@@ -51,4 +51,38 @@ class _GridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Nudges the content sideways while its route comes and goes (the mockup's
+/// `slideNext`), so screen changes have direction without moving the paper.
+class _RouteDrift extends StatelessWidget {
+  const _RouteDrift({required this.child});
+
+  final Widget child;
+
+  static const _distance = 28.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final route = ModalRoute.of(context);
+    if (route?.animation == null) return child;
+    final enter = CurvedAnimation(
+      parent: route!.animation!,
+      curve: platterEase,
+      reverseCurve: platterEase.flipped,
+    );
+    final cover = CurvedAnimation(
+      parent: route.secondaryAnimation!,
+      curve: platterEase,
+      reverseCurve: platterEase.flipped,
+    );
+    return AnimatedBuilder(
+      animation: Listenable.merge([enter, cover]),
+      builder: (context, child) => Transform.translate(
+        offset: Offset(((1 - enter.value) - cover.value) * _distance, 0),
+        child: child,
+      ),
+      child: child,
+    );
+  }
 }
