@@ -17,6 +17,9 @@ Future<bool> askToOpenSettings(
   final go = await showAdaptiveDialog<bool>(
     context: context,
     builder: (context) => AlertDialog.adaptive(
+      // Large text would otherwise push the buttons off a Material dialog;
+      // the iOS alert scrolls on its own.
+      scrollable: true,
       title: Text(title),
       content: Text(
         "Your phone only lets you change this in Settings. We'll open "

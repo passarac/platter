@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../theme/platter_theme.dart';
 import 'paper_grid.dart';
@@ -29,24 +32,163 @@ class OnboardingPage extends StatelessWidget {
     return Scaffold(
       body: PaperGrid(
         child: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _TopBar(onBack: onBack, step: step, steps: steps),
-              Expanded(child: Center(child: art)),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(28, 6, 28, 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: children,
-                ),
+          child: ArtLayout(
+            header: _TopBar(onBack: onBack, step: step, steps: steps),
+            art: Center(child: art),
+            footer: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 6, 28, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+/// Stacks [header], [art] and [footer] to fill the screen, the art taking
+/// whatever room is left. Where that would leave the art under
+/// [minArtHeight] (small phones, landscape, large text), the art stops
+/// shrinking and the page scrolls instead, so copy and buttons are never cut
+/// off.
+class ArtLayout extends StatelessWidget {
+  const ArtLayout({
+    super.key,
+    this.header,
+    required this.art,
+    required this.footer,
+    this.minArtHeight = 120,
+  });
+
+  final Widget? header;
+  final Widget art;
+  final Widget footer;
+  final double minArtHeight;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, viewport) => SingleChildScrollView(
+        child: _ArtColumn(
+          viewportHeight: viewport.maxHeight,
+          minArtHeight: minArtHeight,
+          children: [header ?? const SizedBox.shrink(), art, footer],
+        ),
+      ),
+    );
+  }
+}
+
+/// [ArtLayout]'s column, laid out in a single pass from the header's and
+/// footer's real sizes. (An IntrinsicHeight-based Column relies on cached
+/// size estimates, which go stale when fonts finish loading after the first
+/// frame and leave the art too tall.)
+class _ArtColumn extends MultiChildRenderObjectWidget {
+  const _ArtColumn({
+    required this.viewportHeight,
+    required this.minArtHeight,
+    required super.children,
+  }) : assert(children.length == 3);
+
+  final double viewportHeight;
+  final double minArtHeight;
+
+  @override
+  _RenderArtColumn createRenderObject(BuildContext context) =>
+      _RenderArtColumn(viewportHeight, minArtHeight);
+
+  @override
+  void updateRenderObject(BuildContext context, _RenderArtColumn renderObject) {
+    renderObject
+      ..viewportHeight = viewportHeight
+      ..minArtHeight = minArtHeight;
+  }
+}
+
+class _ArtColumnParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderArtColumn extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, _ArtColumnParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _ArtColumnParentData> {
+  _RenderArtColumn(this._viewportHeight, this._minArtHeight);
+
+  double get viewportHeight => _viewportHeight;
+  double _viewportHeight;
+  set viewportHeight(double value) {
+    if (value == _viewportHeight) return;
+    _viewportHeight = value;
+    markNeedsLayout();
+  }
+
+  double get minArtHeight => _minArtHeight;
+  double _minArtHeight;
+  set minArtHeight(double value) {
+    if (value == _minArtHeight) return;
+    _minArtHeight = value;
+    markNeedsLayout();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! _ArtColumnParentData) {
+      child.parentData = _ArtColumnParentData();
+    }
+  }
+
+  /// Header, art and footer heights for [width], using [measure] to size
+  /// the header and footer at their natural height.
+  (double, double, double) _heights(
+    double width,
+    Size Function(RenderBox child, BoxConstraints constraints) measure,
+  ) {
+    final header = firstChild!;
+    final footer = lastChild!;
+    final natural = BoxConstraints.tightFor(width: width);
+    final top = measure(header, natural).height;
+    final bottom = measure(footer, natural).height;
+    final art = math.max(minArtHeight, viewportHeight - top - bottom);
+    return (top, art, bottom);
+  }
+
+  @override
+  Size computeDryLayout(covariant BoxConstraints constraints) {
+    final (top, art, bottom) = _heights(
+      constraints.maxWidth,
+      (child, c) => child.getDryLayout(c),
+    );
+    return constraints.constrain(
+      Size(constraints.maxWidth, top + art + bottom),
+    );
+  }
+
+  @override
+  void performLayout() {
+    final width = constraints.maxWidth;
+    final (top, art, bottom) = _heights(width, (child, c) {
+      child.layout(c, parentUsesSize: true);
+      return child.size;
+    });
+    final artChild = childAfter(firstChild!)!;
+    artChild.layout(BoxConstraints.tight(Size(width, art)));
+    (artChild.parentData! as _ArtColumnParentData).offset = Offset(0, top);
+    (lastChild!.parentData! as _ArtColumnParentData).offset = Offset(
+      0,
+      top + art,
+    );
+    size = constraints.constrain(Size(width, top + art + bottom));
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) =>
+      defaultPaint(context, offset);
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) =>
+      defaultHitTestChildren(result, position: position);
 }
 
 /// Underlined blue text button (`.link` in the mockup).

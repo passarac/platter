@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme/platter_theme.dart';
 import '../widgets/crayon.dart';
+import '../widgets/onboarding_page.dart';
 import '../widgets/paper_grid.dart';
 import '../widgets/primary_button.dart';
 
@@ -17,39 +18,45 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
       body: PaperGrid(
         child: SafeArea(
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text('Platter', style: PlatterText.head(size: 22)),
+          child: ArtLayout(
+            header: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Platter',
+                textAlign: TextAlign.center,
+                style: PlatterText.head(size: 22),
               ),
-              const Expanded(child: _FloatingArt()),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Column(
-                  children: [
-                    Text(
-                      'Your meals, as a calendar of memories.',
-                      textAlign: TextAlign.center,
-                      style: PlatterText.head(size: 33),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'No calories, no tracking.',
-                      textAlign: TextAlign.center,
-                      style: PlatterText.body(weight: FontWeight.w800),
-                    ),
-                  ],
+            ),
+            art: const _FloatingArt(),
+            footer: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Your meals, as a calendar of memories.',
+                        textAlign: TextAlign.center,
+                        style: PlatterText.head(size: 33),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No calories, no tracking.',
+                        textAlign: TextAlign.center,
+                        style: PlatterText.body(weight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(28, 32, 28, 16),
-                child: PrimaryButton(
-                  label: 'Get started',
-                  onPressed: onGetStarted,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(28, 32, 28, 16),
+                  child: PrimaryButton(
+                    label: 'Get started',
+                    onPressed: onGetStarted,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
