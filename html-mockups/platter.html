@@ -578,6 +578,531 @@ button.arow:hover{background:rgba(31,42,68,.06)}
 .ycuisine-pal{display:flex;align-items:flex-end;gap:8px}
 .ycuisine-pal p{margin:0 0 8px;font-size:13px;font-weight:800;color:var(--ink-2)}
 
+/* ---------- Motion ---------- */
+:root{--ease-out:cubic-bezier(.2,.8,.2,1);--ease-spring:cubic-bezier(.3,1.4,.5,1)}
+/* Zooming between Year → Month → Week → Day grows out of (or shrinks back into) the spot you tapped */
+.cal-body.zoom-in{animation:zoomIn .34s var(--ease-out)}
+.cal-body.zoom-out{animation:zoomOut .34s var(--ease-out)}
+@keyframes zoomIn{from{opacity:0;transform:scale(.88)}}
+@keyframes zoomOut{from{opacity:0;transform:scale(1.08)}}
+/* Header words change with the page */
+.title-btn.t-next small,.title-btn.t-next .big{animation:tNext .3s var(--ease-out)}
+.title-btn.t-prev small,.title-btn.t-prev .big{animation:tPrev .3s var(--ease-out)}
+.title-btn.t-swap small,.title-btn.t-swap .big{animation:tSwap .3s var(--ease-out)}
+.title-btn.t-swap .big{animation-delay:.03s;animation-fill-mode:both}
+@keyframes tNext{from{opacity:0;transform:translateX(18px)}}
+@keyframes tPrev{from{opacity:0;transform:translateX(-18px)}}
+@keyframes tSwap{from{opacity:0;transform:translateY(8px)}}
+/* Picking another day in the month: the preview card refreshes, the new day gives a little bounce */
+.cal-body.day-swap .daycard > *{animation:fadeQuick .22s ease-out}
+.cal-body.day-swap .cell.sel{animation:selPop .32s var(--ease-spring)}
+@keyframes fadeQuick{from{opacity:0;transform:translateY(4px)}}
+@keyframes selPop{40%{transform:scale(1.1)}}
+/* Year cuisine chips and dots */
+.cal-body.refilter .ydots .dot{animation:dotIn .3s var(--ease-spring) both;animation-delay:calc(var(--k, 0) * 4ms)}
+@keyframes dotIn{from{transform:scale(.3);opacity:.3}}
+/* Timeline entrance: the first few days rise in, one after another */
+.screen:not(.active) *{animation-play-state:paused!important}
+.tl-scroll.enter .tl-month:first-child article:nth-of-type(-n+6){animation:riseIn .4s var(--ease-out) both}
+.tl-scroll.enter .tl-month:first-child article:nth-of-type(2){animation-delay:.05s}
+.tl-scroll.enter .tl-month:first-child article:nth-of-type(3){animation-delay:.1s}
+.tl-scroll.enter .tl-month:first-child article:nth-of-type(4){animation-delay:.15s}
+.tl-scroll.enter .tl-month:first-child article:nth-of-type(5){animation-delay:.2s}
+.tl-scroll.enter .tl-month:first-child h2{animation:riseIn .35s var(--ease-out) both}
+.tl-scroll.resize{animation:fadeQuick .25s ease-out}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px)}}
+/* Meal detail opened from a photo: the photo flies into place, the sheet slides up under it */
+.mealview.morph{transform:none;transition:opacity .25s ease-out,visibility 0s}
+.mealview.morph:not(.on){transition:opacity .25s ease-out,visibility 0s .25s}
+.mealview.morph:not(.on){opacity:0}
+.mealview.morph.on .msheet{animation:sheetUp .42s var(--ease-out) both}
+.mealview.morph.on .mhero .bar{animation:fadeQuick .3s .18s ease-out both}
+.mealview.morph .mhero img{visibility:hidden}
+.mealview.morph.landed .mhero img{visibility:visible}
+@keyframes sheetUp{from{transform:translateY(60px);opacity:0}}
+.flyer{position:absolute;z-index:40;object-fit:cover;pointer-events:none;box-shadow:0 18px 40px rgba(31,42,68,.25)}
+/* Tab bar icons give a small bounce when selected */
+.tab[aria-current="page"] svg{animation:tabPop .35s var(--ease-spring)}
+@keyframes tabPop{40%{transform:translateY(-4px) scale(1.12)}}
+/* Smooth press feedback everywhere */
+.sq-btn,.pill-btn,.cell,.wphoto,.mcard,.tl-photo,.ymonth,.cchip,.opt,.mchip,.again,.src,.tl-pill{transition:transform .12s var(--ease-out)}
+.sq-btn:active:not(:disabled),.pill-btn:active,.wphoto:active,.mcard:active,.tl-photo:active,.ymonth:active:not(.future),.cchip:active,.opt:active,.mchip:active,.again:active,.tl-pill:active{transform:scale(.96)}
+.cell:active:not(.future){transform:scale(.93)}
+
+/* ---------- Map ---------- */
+#v-map{background:#F6EFD9}
+.mp-head{flex:none;z-index:3;padding:46px 0 12px;display:flex;flex-direction:column;gap:10px}
+.mp-head::before{inset:-6px -6px 0;--sk-bw:0 0 2.5px 0;--sk-bg:var(--yellow);border-radius:0}
+.mp-head .row-between{padding:0 16px}
+.mp-head h1{margin:0;font-family:var(--head);font-size:32px;font-weight:800;line-height:1}
+.heat-btn{height:44px;padding:0 14px 0 11px;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800;white-space:nowrap;--sk-r:999px;--sk-bg:var(--paper);transition:transform .12s var(--ease-out)}
+.heat-btn[aria-pressed="true"]{color:#fff;--sk-bg:var(--red)}
+.heat-btn[aria-pressed="true"] svg{stroke:#fff;fill:#FFC93C}
+.mp-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 16px 3px}
+.mp-chips::-webkit-scrollbar{display:none}
+.city{height:40px;padding:0 14px 0 11px;flex:none;display:flex;align-items:center;gap:7px;font-size:14px;white-space:nowrap;--sk-r:999px;--sk-bw:2.5px;--sk-bg:var(--paper);transition:transform .12s var(--ease-out),color .2s}
+.city strong{font-weight:800}
+.city span{font-weight:700;color:var(--ink-3)}
+.city .cdot{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink);flex:none}
+.city[aria-pressed="true"]{color:#fff;--sk-bg:var(--ink);--sk-sh:0 3px 0 var(--blue)}
+.city[aria-pressed="true"] span{color:#D5DEEC}
+.city[aria-pressed="true"] .cdot{border-color:#fff}
+
+.mp-wrap{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+.mp-wrap.dragging{cursor:grabbing}
+.mp-canvas{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+/* The crayon map is expensive to draw: keep it on its own layer so panning only moves pixels */
+.mp-canvas > svg{will-change:transform}
+.mp-canvas.glide{transition:transform .55s var(--ease-out)}
+.mp-canvas > svg{position:absolute;inset:0;display:block}
+.mp-label{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;pointer-events:none;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--ink-3)}
+.mp-label.park{font-size:11px;letter-spacing:0;font-style:italic;color:#165244}
+.mp-label.water{font-size:13px;letter-spacing:.02em;font-style:italic;color:var(--blue-ink)}
+.mp-heat{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:0;transition:opacity .45s}
+.mp-heat.on{opacity:1}
+.mp-heat span{position:absolute;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,rgba(229,72,59,.62) 0%,rgba(255,138,91,.42) 38%,rgba(255,201,60,.18) 60%,rgba(255,201,60,0) 72%)}
+
+.mp-area{position:absolute;border:3px dashed #7B5CD6;background:rgba(183,156,240,.2);border-radius:46% 54% 50% 50% / 55% 45% 55% 45%;filter:url(#ob-crayon);pointer-events:none;transition:opacity .3s}
+.mp-area-tag{position:absolute;z-index:2;height:30px;padding:0 11px 0 8px;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:800;white-space:nowrap;transform:translateX(-50%);--sk-r:999px;--sk-bw:2px;--sk-bs:dashed;--sk-bc:#7B5CD6;--sk-bg:var(--paper)}
+.mp-area-tag[aria-pressed="true"]{--sk-bg:#E9E0FF;--sk-bs:solid}
+
+.mp-pin{position:absolute;z-index:3;width:48px;height:57px;margin:-24px 0 0 -24px;transition:transform .25s var(--ease-spring),opacity .3s}
+.mp-pin .disc{position:absolute;left:0;top:0;width:48px;height:48px;--sk-r:50%;--sk-bw:3px;--sk-bg:var(--paper)}
+.mp-pin .disc img{position:absolute;left:6px;top:6px;width:36px;height:36px;border-radius:50%;object-fit:cover;display:block}
+.mp-pin .tip{position:absolute;left:15px;top:44px;filter:url(#ob-crayon)}
+.mp-pin .cnt{position:absolute;top:-7px;right:-9px;min-width:22px;height:22px;padding:0 5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border-radius:999px;background:var(--yellow);border:2px solid var(--ink)}
+.mp-pin[aria-pressed="true"]{z-index:5;transform:scale(1.18) translateY(-4px)}
+.mp-pin[aria-pressed="true"] .disc{--sk-sh:0 0 0 4px var(--blue)}
+.mp-pin.home .disc{--sk-bg:var(--pink)}
+.mp-pin.home .disc b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:18px;font-weight:800}
+.mp-pin.home{width:56px;height:66px;margin:-28px 0 0 -28px}
+.mp-pin.home .disc{width:56px;height:56px}
+.mp-pin.home .tip{left:19px;top:52px}
+.mp-pin .name{position:absolute;left:50%;top:100%;margin-top:-2px;transform:translateX(-50%);padding:1px 8px;font-size:11px;font-weight:800;white-space:nowrap;border-radius:999px;background:var(--paper);border:2px solid var(--ink)}
+.mp-wrap.heat .mp-pin:not([aria-pressed="true"]){opacity:.55}
+.mp-canvas.drop .mp-pin{animation:pinDrop .5s var(--ease-spring) both;animation-delay:calc(var(--k) * 45ms + 120ms)}
+@keyframes pinDrop{from{opacity:0;transform:translateY(-36px) scale(.6)}}
+.mp-canvas.drop > svg,.mp-canvas.drop .mp-label{animation:fadeQuick .35s ease-out both}
+
+/* World overview */
+.w-svg{position:absolute;inset:0;width:100%;height:100%;display:block;filter:url(#ob-crayon)}
+.w-labels,.w-marks{position:absolute;inset:0;pointer-events:none}
+.w-marks button{pointer-events:auto}
+.w-mark{position:absolute;z-index:3;width:52px;height:60px;margin:-30px 0 0 -26px;animation:pinDrop .5s var(--ease-spring) both;animation-delay:calc(var(--k) * 70ms)}
+.w-mark .stack{position:absolute;left:2px;top:0;width:48px;height:48px}
+.w-mark .disc{position:absolute;left:0;top:0;width:48px;height:48px;--sk-r:50%;--sk-bw:3px;--sk-bg:var(--paper);transform:translate(calc(var(--o) * 5px), calc(var(--o) * -4px)) rotate(calc(var(--o) * 8deg));z-index:calc(3 - var(--o))}
+.w-mark .disc img{position:absolute;left:6px;top:6px;width:36px;height:36px;border-radius:50%;object-fit:cover;display:block}
+.w-mark .tip{position:absolute;left:17px;top:44px;filter:url(#ob-crayon)}
+.w-mark .cnt{position:absolute;z-index:4;top:-8px;right:-10px;min-width:24px;height:22px;padding:0 5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border-radius:999px;background:var(--yellow);border:2px solid var(--ink)}
+.w-mark .name{position:absolute;left:50%;top:100%;margin-top:2px;transform:translateX(-50%);padding:1px 8px;font-size:12px;font-weight:800;white-space:nowrap;border-radius:999px;background:var(--paper);border:2px solid var(--ink)}
+.w-mark.group .cnt{background:var(--pink)}
+.w-mark:active .stack{transform:scale(.94)}
+.w-zoom{position:absolute;z-index:5;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+.w-zoom button{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;line-height:1;--sk-r:12px;--sk-bg:var(--paper);--sk-sh:0 3px 0 var(--ink)}
+.w-zoom button:disabled{opacity:.4}
+.w-zoom button:active:not(:disabled){transform:translateY(2px);--sk-sh:0 1px 0 var(--ink)}
+.city.world .cdot{background:conic-gradient(#2F5FD0 0 33%,#E5483B 0 66%,#2BB3A3 0)}
+.mp-wrap.enter{animation:cityIn .45s var(--ease-out)}
+.mp-wrap.leave{animation:worldIn .45s var(--ease-out)}
+@keyframes cityIn{from{opacity:0;transform:scale(.92)}}
+@keyframes worldIn{from{opacity:0;transform:scale(1.08)}}
+
+/* Sheet */
+.mp-sheet{position:absolute;z-index:6;left:8px;right:8px;bottom:8px;padding:10px 14px 14px;display:flex;flex-direction:column;gap:10px;--sk-r:22px;--sk-sh:0 4px 0 var(--ink);transition:transform .4s var(--ease-out)}
+.mp-sheet .grab{align-self:center;width:40px;height:5px;border-radius:3px;background:rgba(31,42,68,.3)}
+.mp-sheet h2{margin:0;font-family:var(--head);font-size:22px;font-weight:800;line-height:1.1}
+.mp-sheet .sub{font-size:14px;font-weight:700;color:var(--ink-3)}
+.mp-sheet .x{width:44px;height:44px;flex:none;margin:-6px -6px 0 0;display:flex;align-items:center;justify-content:center}
+.mp-row{display:flex;gap:8px;overflow-x:auto;margin:0 -14px;padding:0 14px 2px;scrollbar-width:none}
+.mp-row::-webkit-scrollbar{display:none}
+.mp-meal{width:78px;flex:none;display:flex;flex-direction:column;gap:3px;text-align:left;transition:transform .12s var(--ease-out)}
+.mp-meal:active{transform:scale(.95)}
+.mp-meal img{width:78px;height:78px;object-fit:cover;border-radius:12px;border:2px solid var(--ink);display:block}
+.mp-meal b{font-size:12px;line-height:1.2}
+.mp-meal span{font-size:11px;color:var(--ink-3);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-all{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:236px;overflow-y:auto;scrollbar-width:none;margin:0 -2px;padding:2px}
+.mp-all .mp-meal{width:auto}
+.mp-all .mp-meal img{width:100%;height:auto;aspect-ratio:1}
+.mp-btns{display:flex;gap:8px}
+.mp-btns .btn{min-height:46px;font-size:16px;--sk-r:14px}
+.mp-btns .btn.primary{flex:1.3;--sk-sh:0 3px 0 var(--ink)}
+.mp-btns .btn.secondary{flex:1}
+.mp-peek{display:flex;align-items:center;gap:10px}
+.mp-peek p{margin:0;font-size:14px;font-weight:700;color:var(--ink-2);line-height:1.4}
+.mp-stats{display:flex;gap:6px;flex-wrap:wrap}
+.mp-stats span{padding:3px 10px;font-size:13px;font-weight:800;border-radius:999px;border:2px solid var(--ink);background:var(--white)}
+.mp-sheet.swap > *:not(.grab){animation:fadeQuick .25s ease-out both}
+
+/* ---------- Shared page bits (Rediscover, Plated) ---------- */
+.page-head{flex:none;z-index:3;padding:46px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.page-head::before{inset:-6px -6px 0;--sk-bw:0 0 2.5px 0;--sk-bg:var(--yellow);border-radius:0}
+.page-head h1{margin:0;font-family:var(--head);font-size:32px;font-weight:800;line-height:1}
+.page-head .sub{display:block;margin-top:3px;font-size:14px;font-weight:800;color:var(--ink-2)}
+.page-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:14px 14px 24px;display:flex;flex-direction:column;gap:14px}
+.page-body > *{flex:none}
+.page-body::-webkit-scrollbar{display:none}
+.seg{position:relative;padding:3px;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:3px;--sk-r:999px;--sk-bg:var(--paper)}
+.seg button{position:relative;z-index:1;height:40px;border-radius:999px;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:color .25s}
+.seg button[aria-pressed="true"]{color:#fff}
+.seg .seg-ind{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px - (var(--n) - 1) * 3px) / var(--n));border-radius:999px;background:var(--ink);filter:url(#ob-crayon);transform:translateX(calc(var(--i, 0) * (100% + 3px)));transition:transform .32s var(--ease-out)}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:4px 2px -4px}
+.sec-title h2{margin:0;font-family:var(--head);font-size:22px;font-weight:800;line-height:1.1}
+.sec-title a,.sec-title .lnk{font-size:14px;font-weight:800;color:var(--blue-ink);white-space:nowrap}
+.mini-label{margin:6px 2px -6px;font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink-3)}
+.fade-swap > *{animation:fadeQuick .28s ease-out both}
+
+/* ---------- Rediscover: surprise ---------- */
+.why{padding:4px 11px 4px 9px;display:inline-flex;align-items:center;gap:5px;font-size:13px;font-weight:800;white-space:nowrap;--sk-r:999px;--sk-bw:2px;--sk-bg:#E9E0FF}
+.surprise-wrap{position:relative;padding:6px 2px 0}
+.scard{display:block;width:100%;padding:8px 8px 12px;text-align:left;transform:rotate(-1.5deg);--sk-r:22px;--sk-bg:var(--white);--sk-sh:0 5px 0 var(--ink)}
+.scard .ph{position:relative;display:block;width:100%;border-radius:16px;overflow:hidden;border:2.5px solid var(--ink)}
+.scard .ph img{width:100%;height:220px;object-fit:cover;display:block}
+.scard .date{position:absolute;left:10px;bottom:10px;padding:4px 12px;font-size:14px;font-weight:800;border-radius:999px;background:var(--paper);border:2px solid var(--ink)}
+.scard h3{margin:12px 6px 8px;font-family:var(--head);font-size:23px;font-weight:800;line-height:1.1}
+.scard .chips{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:0 4px}
+.schip{height:36px;padding:0 13px 0 11px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:800;--sk-r:999px;--sk-bw:2px;transition:transform .12s var(--ease-out)}
+.schip:active{transform:scale(.96)}
+.surprise-wrap .peek{position:absolute;z-index:2;right:-4px;top:-28px}
+.surprise-wrap .peek .thought{position:absolute;right:76px;top:6px;padding:5px 10px;font-size:12px;font-weight:800;white-space:nowrap;border-radius:12px 12px 4px 12px;background:var(--white);border:2px solid var(--ink)}
+.scard.out{animation:cardOut .32s ease-in forwards}
+.scard.in{animation:cardIn .5s var(--ease-spring) both}
+@keyframes cardOut{to{transform:translate(-120%,30px) rotate(-18deg);opacity:0}}
+@keyframes cardIn{from{transform:translateY(40px) rotate(6deg) scale(.9);opacity:0}}
+.rd-btns{display:grid;grid-template-columns:1.4fr 1fr;gap:10px}
+.rd-btns .btn{min-height:56px;flex-direction:row;gap:8px;--sk-r:18px}
+.rd-btns .btn.yellow{--sk-bg:var(--yellow);--sk-sh:0 4px 0 var(--ink);color:var(--ink)}
+.rd-btns .btn.yellow:active{transform:translateY(3px);--sk-sh:0 1px 0 var(--ink)}
+.shake{margin:-4px 0 0;text-align:center;font-size:13px;font-weight:800;color:var(--ink-3);display:flex;align-items:center;justify-content:center;gap:6px}
+.rd-divider{height:0;border-top:2.5px dashed var(--empty-line);margin:6px -14px 0}
+.row-scroll{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:2px 14px 8px}
+.row-scroll::-webkit-scrollbar{display:none}
+
+/* Collection cards */
+.ccard{width:232px;flex:none;padding:7px 7px 11px;display:flex;flex-direction:column;gap:7px;text-align:left;--sk-r:18px;--sk-bg:var(--white);--sk-sh:0 4px 0 var(--ink);transition:transform .12s var(--ease-out)}
+.ccard:active{transform:scale(.97)}
+.ccard .mosaic{height:104px;display:grid;grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr;gap:3px;border-radius:12px;overflow:hidden;border:2px solid var(--ink)}
+.ccard .mosaic img{width:100%;height:100%;object-fit:cover;display:block;min-height:0}
+.ccard .mosaic img:first-child{grid-row:span 2}
+.ccard .mosaic.one{grid-template-columns:1fr;grid-template-rows:1fr}
+.ccard .mosaic.one img:first-child{grid-row:auto}
+.ccard .kind{align-self:flex-start;padding:1px 8px;font-size:11px;font-weight:800;border-radius:999px;border:1.5px solid var(--ink);background:var(--c, var(--nav))}
+.ccard b{font-family:var(--head);font-size:17px;line-height:1.15;padding:0 3px}
+.ccard small{font-size:12.5px;font-weight:700;color:var(--ink-3);line-height:1.35;padding:0 3px}
+.ccard.add{align-items:center;justify-content:center;text-align:center;gap:6px;--sk-bs:dashed;--sk-bc:var(--ink-3);--sk-sh:none;--sk-bg:var(--paper);min-height:206px}
+.ccard.add .plusb{width:48px;height:48px;border-radius:50%;background:var(--blue);color:#fff;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;line-height:1}
+.ccard.add em{font-style:italic;font-size:13px;color:var(--ink-2)}
+.ccard .pinmark{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;background:var(--paper);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center}
+
+/* Collections library */
+.csearch{position:relative;display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;--sk-r:16px;--sk-bg:var(--paper)}
+.csearch input{flex:1;min-width:0;height:100%;border:0;background:none;font:inherit;font-size:16px;font-weight:700;color:var(--ink);outline:none}
+.csearch input::placeholder{color:#8A97AE}
+.cfilters{display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px 2px}
+.cfilters::-webkit-scrollbar{display:none}
+.cfilters button{height:38px;padding:0 15px;flex:none;font-size:14px;font-weight:800;--sk-r:999px;--sk-bw:2.5px;--sk-bg:var(--paper)}
+.cfilters button[aria-pressed="true"]{color:#fff;--sk-bg:var(--ink)}
+.crow{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 10px 8px 8px;text-align:left;width:100%;--sk-r:18px;--sk-bg:var(--white);--sk-sh:0 4px 0 var(--ink)}
+.crow .mosaic{height:96px;display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr;gap:3px;border-radius:12px;overflow:hidden;border:2px solid var(--ink)}
+.crow .mosaic img{width:100%;height:100%;object-fit:cover;display:block;min-height:0}
+.crow .mosaic img:first-child{grid-row:span 2}
+.crow .info{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.crow .kind{padding:1px 9px;font-size:11px;font-weight:800;border-radius:999px;border:1.5px solid var(--ink);background:var(--c, var(--nav))}
+.crow b{font-family:var(--head);font-size:18px;line-height:1.15}
+.crow small{font-size:13px;font-weight:700;color:var(--ink-3);line-height:1.35}
+.pinbtn{width:38px;height:38px;border-radius:50%;border:2px solid var(--ink);background:var(--paper);display:flex;align-items:center;justify-content:center;flex:none;transition:transform .15s var(--ease-spring),background .2s}
+.pinbtn[aria-pressed="true"]{background:var(--yellow)}
+.pinbtn:active{transform:scale(.88)}
+.cempty{padding:22px;text-align:center;font-size:15px;font-weight:700;color:var(--ink-2);--sk-bs:dashed;--sk-bc:var(--empty-line);--sk-bg:var(--white);--sk-r:18px;display:flex;flex-direction:column;align-items:center;gap:8px}
+
+/* Collection detail */
+.collview{position:absolute;inset:0 0 86px;z-index:5;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);visibility:hidden;transition:transform .36s var(--ease-out),visibility 0s .36s}
+.collview.on{transform:none;visibility:visible;transition:transform .36s var(--ease-out),visibility 0s}
+.cv-scroll{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none}
+.cv-top{position:relative;height:292px;padding-top:46px}
+.cv-top::before{inset:-6px -6px 0;--sk-bw:0 0 2.5px 0;--sk-bg:var(--yellow);border-radius:0}
+.cv-top .bar{position:absolute;z-index:3;left:14px;right:14px;top:50px;display:flex;justify-content:space-between;align-items:center}
+.cv-tag{padding:3px 10px;font-size:12px;font-weight:800;border-radius:999px;border:2px solid var(--ink);background:var(--c, #FFD3E2)}
+.fan{position:absolute;left:50%;top:92px;width:0;height:0}
+.fan .polaroid{position:absolute;width:134px;padding:6px 6px 22px;background:var(--white);border:2.5px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);transform-origin:50% 120%;transition:transform .5s var(--ease-spring)}
+.fan .polaroid img{width:100%;height:122px;object-fit:cover;border-radius:9px;display:block}
+.fan .polaroid span{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:12px;font-weight:800}
+.fan .p0{left:-67px;top:0;z-index:2}
+.fan .p1{left:-160px;top:22px;transform:rotate(-9deg)}
+.fan .p2{left:26px;top:22px;transform:rotate(8deg)}
+.collview.on .fan .p1{animation:fanL .6s var(--ease-spring) both}
+.collview.on .fan .p2{animation:fanR .6s var(--ease-spring) both}
+@keyframes fanL{from{transform:translateX(90px) rotate(0)}}
+@keyframes fanR{from{transform:translateX(-90px) rotate(0)}}
+.cv-info{padding:18px 18px 6px;display:flex;flex-direction:column;gap:8px}
+.cv-info h1{margin:0;font-family:var(--head);font-size:30px;font-weight:800;line-height:1.05}
+.cv-info .sub{font-size:16px;font-weight:800;color:var(--ink-2);line-height:1.35}
+.cv-info .auto-note{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--ink-3)}
+.cv-btns{padding:6px 18px 4px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cv-btns .btn{min-height:50px;flex-direction:row;gap:8px;font-size:18px;--sk-r:16px}
+.cv-grid{padding:12px 14px 22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 8px}
+.cv-meal{display:flex;flex-direction:column;gap:2px;text-align:left;min-width:0;position:relative}
+.cv-meal img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;border:2px solid var(--ink);display:block;margin-bottom:4px}
+.cv-meal b{font-size:13px;line-height:1.2}
+.cv-meal span{font-size:12px;font-weight:700;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cv-meal .best{position:absolute;top:-6px;right:-6px;width:28px;height:28px;border-radius:50%;background:#FFC93C;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px}
+.cv-del{margin:0 auto 22px;display:block}
+
+/* New collection */
+.ncview{position:absolute;inset:0;z-index:7;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;transform:translateY(100%);visibility:hidden;transition:transform .4s var(--ease-out),visibility 0s .4s}
+.ncview.on{transform:none;visibility:visible;transition:transform .4s var(--ease-out),visibility 0s}
+.nc-head{flex:none;padding:46px 14px 14px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:6px}
+.nc-head::before{inset:-6px -6px 0;--sk-bw:0 0 2.5px 0;--sk-bg:var(--yellow);border-radius:0}
+.nc-head h1{margin:0;text-align:center;font-family:var(--head);font-size:22px;font-weight:800}
+.nc-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:16px 16px 20px;display:flex;flex-direction:column;gap:12px}
+.nc-body > *{flex:none}
+.nc-preview{display:flex;align-items:center;gap:14px;padding:10px;--sk-r:18px;--sk-bg:var(--c);--sk-sh:0 4px 0 var(--ink);transition:background .2s}
+.nc-preview img,.nc-preview .ph{width:76px;height:76px;flex:none;border-radius:12px;border:2px solid var(--ink);object-fit:cover;background:var(--paper)}
+.nc-preview small{display:block;font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink-3)}
+.nc-preview b{display:block;font-family:var(--head);font-size:18px;line-height:1.15;margin:2px 0}
+.nc-preview span{font-size:13px;font-weight:800;color:var(--ink-2)}
+.swatches{display:flex;gap:12px}
+.swatch{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);display:flex;align-items:center;justify-content:center;transition:transform .15s var(--ease-spring)}
+.swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--blue);transform:scale(1.05)}
+.nc-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.npick{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;border:2.5px solid var(--ink);transition:transform .15s var(--ease-spring)}
+.npick img{width:100%;height:100%;object-fit:cover;display:block}
+.npick span{position:absolute;left:5px;right:5px;bottom:5px;padding:1px 6px;font-size:11px;font-weight:800;border-radius:6px;background:rgba(255,253,246,.92);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left}
+.npick i{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;border:2px solid var(--ink);background:rgba(255,255,255,.85)}
+.npick[aria-pressed="true"]{border-color:var(--blue);box-shadow:inset 0 0 0 2px var(--blue)}
+.npick[aria-pressed="true"] i{background:var(--blue) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4L18 8'/%3E%3C/svg%3E") center/16px no-repeat}
+.npick:active{transform:scale(.95)}
+.nc-covers{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px}
+.nc-covers button{position:relative;width:64px;height:64px;flex:none;border-radius:12px;overflow:hidden;border:2.5px solid var(--ink)}
+.nc-covers button img{width:100%;height:100%;object-fit:cover;display:block}
+.nc-covers button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--paper),0 0 0 6px var(--blue)}
+.nc-covers button[aria-pressed="true"]::after{content:"Cover";position:absolute;left:0;right:0;bottom:0;background:var(--blue);color:#fff;font-size:10px;font-weight:800;text-align:center}
+.nc-foot{flex:none;padding:12px 16px 30px;display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.nc-foot::before{inset:0 -6px -6px;--sk-bg:var(--nav);--sk-bw:2.5px 0 0 0;border-radius:0}
+
+/* Wander */
+.wanderview{position:absolute;inset:0;z-index:7;display:flex;flex-direction:column;overflow:hidden;background:var(--yellow);transform:translateY(100%);visibility:hidden;transition:transform .42s var(--ease-out),visibility 0s .42s}
+.wanderview.on{transform:none;visibility:visible;transition:transform .42s var(--ease-out),visibility 0s}
+.wanderview::before{content:"";position:absolute;inset:-8px;z-index:-1;background-image:linear-gradient(rgba(31,42,68,.07) 1.5px,transparent 1.5px),linear-gradient(90deg,rgba(31,42,68,.07) 1.5px,transparent 1.5px);background-size:39px 39px;filter:url(#ob-crayon)}
+.wd-head{padding:52px 20px 0;display:flex;align-items:flex-start;gap:14px}
+.wd-head h1{margin:0;font-family:var(--head);font-size:30px;font-weight:800;line-height:1}
+.wd-head p{margin:3px 0 0;font-size:14px;font-weight:800;color:var(--ink-2);line-height:1.3}
+.wd-stage{position:relative;flex:1;min-height:0}
+.wcard{position:absolute;left:40px;top:34px;width:290px;padding:8px 8px 14px;text-align:left;touch-action:none;cursor:grab;--sk-r:20px;--sk-bg:var(--white);--sk-sh:0 5px 0 var(--ink);transition:transform .45s var(--ease-out),opacity .35s}
+.wcard .ph{display:block;border-radius:14px;overflow:hidden;border:2.5px solid var(--ink)}
+.wcard .ph img{width:100%;height:300px;object-fit:cover;display:block;-webkit-user-drag:none}
+.wcard h3{margin:12px 6px 8px;font-family:var(--head);font-size:22px;font-weight:800;line-height:1.1}
+.wcard .wrow2{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px}
+.wcard .wrow2 span{font-size:13px;font-weight:800;color:var(--ink-2);white-space:nowrap}
+.wcard.cur{z-index:3;transform:rotate(-2deg)}
+.wcard.next{z-index:2;transform:translateX(270px) rotate(7deg) scale(.9);cursor:pointer}
+.wcard.gone{z-index:4;transform:translateX(-420px) rotate(-16deg);opacity:0;pointer-events:none}
+.wcard.dragging{transition:none;cursor:grabbing}
+.because{position:absolute;z-index:4;right:-6px;top:200px;padding:6px 10px;font-size:12px;font-weight:800;line-height:1.15;text-align:center;transform:rotate(6deg);--sk-r:10px;--sk-bw:2px;--sk-bg:var(--nav);transition:opacity .25s}
+.because small{display:block;font-size:11px;font-weight:700;color:var(--ink-3)}
+.wd-trail{position:absolute;left:0;right:0;bottom:142px;display:flex;justify-content:center;gap:6px}
+.wd-trail span{width:8px;height:8px;border-radius:4px;background:rgba(31,42,68,.25);transition:width .25s}
+.wd-trail span.on{width:22px;background:var(--ink)}
+.wd-hint{position:absolute;left:14px;right:14px;bottom:24px;display:flex;align-items:flex-end;gap:8px}
+.wd-hint .bub{flex:1;padding:10px 14px;--sk-bg:var(--white);--sk-r:14px 14px 14px 4px}
+.wd-hint b{display:block;font-size:16px}
+.wd-hint span{font-size:13px;font-weight:700;color:var(--ink-2)}
+.wd-end{position:absolute;left:24px;right:24px;top:60px;padding:24px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;--sk-r:22px;--sk-bg:var(--white);--sk-sh:0 5px 0 var(--ink);animation:cardIn .5s var(--ease-spring) both}
+.wd-end h2{margin:0;font-family:var(--head);font-size:24px}
+.wd-end p{margin:0;font-size:15px;font-weight:700;color:var(--ink-2)}
+.wd-end .trail-ph{display:flex;margin:4px 0}
+.wd-end .trail-ph img{width:50px;height:50px;border-radius:12px;border:2px solid var(--ink);object-fit:cover;margin-left:-14px;background:var(--paper)}
+.wd-end .trail-ph img:first-child{margin-left:0}
+.wd-end .btn{width:100%}
+
+/* ---------- Plated: stats ---------- */
+.story-banner{position:relative;overflow:hidden;min-height:132px;padding:18px 16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;color:#fff;--sk-r:22px;--sk-bg:var(--blue);--sk-sh:0 5px 0 var(--ink);transition:transform .12s var(--ease-out)}
+.story-banner:active{transform:scale(.98)}
+.story-banner .tag{padding:2px 10px;font-size:12px;font-weight:800;color:var(--ink);border-radius:999px;background:var(--yellow);border:2px solid var(--ink)}
+.story-banner b{font-family:var(--head);font-size:23px;line-height:1.1;max-width:200px}
+.story-banner .play{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800}
+.story-banner .play i{width:26px;height:26px;border-radius:50%;background:var(--white);display:flex;align-items:center;justify-content:center}
+.story-banner .cards{position:absolute;right:30px;top:16px;width:88px;height:96px}
+.story-banner .cards span{position:absolute;inset:0;border-radius:12px;border:2.5px solid var(--ink)}
+.story-banner .cards span:nth-child(1){background:var(--pink);transform:rotate(-14deg) translateX(-18px)}
+.story-banner .cards span:nth-child(2){background:var(--mint);transform:rotate(-4deg) translateX(-4px)}
+.story-banner .cards span:nth-child(3){background:var(--yellow);transform:rotate(8deg) translateX(12px)}
+.story-banner .pal{position:absolute;right:4px;bottom:-6px}
+.stiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stile{padding:10px 10px 9px;display:flex;flex-direction:column;--sk-r:14px;--sk-bg:var(--c);min-width:0}
+.stile b{font-family:var(--head);font-size:26px;line-height:1}
+.stile span{font-size:12.5px;font-weight:800;margin-top:3px}
+.pcard{padding:14px;display:flex;flex-direction:column;gap:12px;--sk-r:20px;--sk-bg:var(--white);--sk-sh:0 4px 0 var(--ink)}
+.pcard .hd{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.pcard h3{margin:0;font-family:var(--head);font-size:19px;font-weight:800}
+.pcard .hd span{font-size:13px;font-weight:800;color:var(--ink-3);white-space:nowrap}
+.pcard p.note{margin:0;font-size:14px;font-weight:700;color:var(--ink-2);line-height:1.4}
+.pbars{height:150px;display:flex;align-items:flex-end;gap:5px}
+.pbar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;font-size:11px;font-weight:800}
+.pbar i{display:block;width:100%;border-radius:8px 8px 4px 4px;border:2px solid var(--ink);background:#BFDBFF;height:var(--h);min-height:4px;transform-origin:bottom;animation:grow .6s var(--ease-out) both;animation-delay:calc(var(--k) * 35ms)}
+.pbar.top i{background:var(--blue)}
+.pbar.top em{color:var(--blue-ink)}
+.pbar em{font-style:normal}
+.pbar small{font-size:11px;font-weight:800;color:var(--ink-3)}
+@keyframes grow{from{transform:scaleY(0)}}
+.cstack{display:flex;gap:4px;height:28px}
+.cstack span{border-radius:8px;border:2px solid var(--ink);min-width:8px;animation:growX .6s var(--ease-out) both}
+@keyframes growX{from{transform:scaleX(0);transform-origin:left}}
+.legend2{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.legend2 span{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800}
+.legend2 span em{margin-left:auto;font-style:normal;color:var(--ink-3)}
+.split{display:flex;height:46px;border-radius:14px;overflow:hidden;border:2.5px solid var(--ink)}
+.split div{flex-basis:0;min-width:max-content;padding:0 12px;white-space:nowrap;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:14px;animation:growX .7s var(--ease-out) both}
+.slots4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.slots4 div{padding:8px 6px;text-align:center;border-radius:12px;border:2px solid var(--ink)}
+.slots4 b{display:block;font-family:var(--head);font-size:20px}
+.slots4 span{font-size:11.5px;font-weight:800}
+.wkbars{height:90px}
+.rank{display:flex;flex-direction:column;gap:4px}
+.rank button,.rank div{display:grid;grid-template-columns:28px 44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:5px 4px;text-align:left;border-radius:12px}
+.rank button:hover{background:rgba(31,42,68,.05)}
+.rank .n{width:26px;height:26px;border-radius:50%;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:var(--nav)}
+.rank img{width:44px;height:44px;border-radius:10px;border:2px solid var(--ink);object-fit:cover}
+.rank b{display:block;font-size:15px;line-height:1.2}
+.rank small{display:block;font-size:12.5px;font-weight:700;color:var(--ink-3)}
+.rank .v{font-family:var(--head);font-size:16px;font-weight:800;white-space:nowrap}
+.rank .stars{font-size:13px}
+.pl-period{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-2px 0 -4px}
+.pl-period .opts{flex:1;justify-content:center}
+.pl-period strong{font-family:var(--head);font-size:18px}
+
+/* Story */
+.storyview{position:absolute;inset:0;z-index:8;overflow:hidden;background:var(--bg,var(--yellow));transition:background .4s,transform .42s var(--ease-out),visibility 0s .42s;transform:translateY(100%);visibility:hidden}
+.storyview.on{transform:none;visibility:visible;transition:background .4s,transform .42s var(--ease-out),visibility 0s}
+.storyview::before{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(31,42,68,.13) 1.6px,transparent 1.7px);background-size:22px 22px;pointer-events:none}
+.st-prog{position:absolute;z-index:3;left:14px;right:14px;top:48px;display:flex;gap:4px}
+.st-prog span{flex:1;height:6px;border-radius:3px;border:1.5px solid var(--ink);background:var(--paper);overflow:hidden}
+.st-prog span i{display:block;height:100%;width:0;background:var(--ink)}
+.st-prog span.done i{width:100%}
+.st-prog span.now i{animation:fillBar var(--dur, 6s) linear forwards}
+.storyview.paused .st-prog span.now i{animation-play-state:paused}
+@keyframes fillBar{to{width:100%}}
+.st-top{position:absolute;z-index:3;left:14px;right:14px;top:66px;display:flex;justify-content:space-between;align-items:center}
+.st-top .pill-btn{--sk-bg:var(--paper)}
+.st-card{position:absolute;z-index:2;inset:124px 22px 70px;display:flex;flex-direction:column;gap:12px;pointer-events:none}
+.st-card.in{animation:stIn .45s var(--ease-out) both}
+.st-card.back{animation:stBack .45s var(--ease-out) both}
+@keyframes stIn{from{opacity:0;transform:translateX(40px) scale(.97)}}
+@keyframes stBack{from{opacity:0;transform:translateX(-40px) scale(.97)}}
+.st-card .chip{align-self:flex-start;--sk-bg:var(--paper);letter-spacing:.08em}
+.st-card h2{margin:0;font-family:var(--head);font-size:44px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.st-card h2 .big{display:block;font-size:92px;line-height:.95}
+.st-card .lead{margin:0;font-family:var(--head);font-size:20px;font-weight:800}
+.st-card p{margin:0;font-size:17px;font-weight:700;color:var(--ink-2);line-height:1.45}
+.st-card .art{flex:1;min-height:0;position:relative}
+.st-photo{position:absolute;width:150px;padding:6px;background:var(--white);border:2.5px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink)}
+.st-photo img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;display:block}
+.st-next{position:absolute;z-index:3;right:20px;bottom:26px;font-size:15px;font-weight:800;display:flex;align-items:center;gap:6px}
+.st-tap{position:absolute;z-index:1;top:110px;bottom:0;width:50%}
+.st-tap.l{left:0}.st-tap.r{right:0}
+.st-card .btn,.st-card .link{pointer-events:auto;position:relative;z-index:4}
+.st-card .btn,.page-body > .btn{flex-direction:row;gap:8px}
+/* Story cards: headline, a full stage, then fact chips */
+.st-card{inset:118px 20px 64px;gap:10px}
+.st-card h2{font-size:38px;line-height:1.02}
+.st-card h2.xl{font-size:48px}
+.st-card h2 .mega{display:block;font-size:110px;line-height:.9;letter-spacing:-.03em}
+.st-card .lead{font-size:19px}
+.st-card .art{flex:1;min-height:0;position:relative;margin:0 -4px;display:flex;flex-direction:column;justify-content:center}
+.st-card .st-stage{position:relative;flex:none;width:100%}
+.st-card .abs{position:absolute}
+.st-card .abs .pal{display:block}
+.st-card .floor{position:absolute;left:10%;right:10%;bottom:6px;height:22px;border-radius:50%;background:rgba(31,42,68,.12)}
+.spark{animation:twinkle 2.4s ease-in-out infinite}
+@keyframes twinkle{50%{transform:scale(.6) rotate(20deg);opacity:.7}}
+.st-facts{display:flex;flex-wrap:wrap;gap:6px}
+.fact{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:2px solid var(--ink);background:var(--paper);font-size:14px;font-weight:800;box-shadow:0 2px 0 var(--ink);animation:fadeQuick .35s ease-out both;animation-delay:var(--d)}
+.pola{position:absolute;padding:6px 6px 8px;background:var(--white);border:2.5px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);transform:rotate(var(--r));animation:polaIn .55s var(--ease-spring) both;animation-delay:var(--d)}
+.pola img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:9px;display:block}
+.pola b{display:block;margin-top:5px;text-align:center;font-family:var(--head);font-size:16px;line-height:1.1}
+.pola b small{display:block;font-family:var(--body);font-size:12px;color:var(--ink-3)}
+@keyframes polaIn{from{opacity:0;transform:translateY(34px) rotate(0) scale(.85)}}
+.say{position:absolute;z-index:5;padding:8px 12px;background:var(--white);border:2px solid var(--ink);border-radius:14px 14px 14px 4px;font-size:14px;font-weight:800;line-height:1.2;box-shadow:0 3px 0 var(--ink);animation:cardIn .5s .5s var(--ease-spring) both}
+.say.r{border-radius:14px 14px 4px 14px}
+.sticker{position:absolute;z-index:5;width:84px;height:84px;border-radius:50%;background:var(--pink);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-size:30px;font-weight:800;transform:rotate(12deg);box-shadow:0 4px 0 var(--ink);animation:stamp .5s .35s var(--ease-spring) both}
+@keyframes stamp{from{transform:scale(2) rotate(-20deg);opacity:0}}
+.stamp{position:absolute;z-index:4;padding:6px 12px;border:3px double var(--red);color:var(--red);border-radius:10px;font-size:14px;font-weight:800;letter-spacing:.08em;background:rgba(255,253,246,.7);transform:rotate(-10deg);animation:stamp .5s .45s var(--ease-spring) both}
+.quote{position:absolute;left:4px;right:96px;padding:10px 12px;background:var(--white);border:2px solid var(--ink);border-radius:14px;font-size:15px;font-weight:700;font-style:italic;line-height:1.35;box-shadow:0 3px 0 var(--ink);animation:fadeQuick .4s .4s ease-out both}
+.quote b{display:block;margin-top:4px;font-style:normal;font-size:13px;color:var(--ink-3)}
+/* Wall of plates */
+.wall{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-content:start}
+.wall img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:2px solid var(--ink);transform:rotate(var(--r));animation:pop .35s var(--ease-spring) both;animation-delay:calc(var(--k) * 22ms)}
+/* Busiest bars with a pal on top */
+.big-bars{position:absolute;inset:70px 0 0;display:flex;align-items:flex-end;gap:5px}
+.bb{position:relative;flex:1;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px}
+.bb i{width:100%;height:var(--h);min-height:6px;border-radius:8px 8px 4px 4px;border:2.5px solid var(--ink);background:var(--paper);transform-origin:bottom;animation:grow .7s var(--ease-out) both;animation-delay:calc(var(--k) * 45ms + .15s)}
+.bb.top i{background:var(--blue)}
+.bb em{font-style:normal;font-size:13px;font-weight:800}
+.bb.top em{font-size:16px;color:var(--blue-ink)}
+.bb small{font-size:13px;font-weight:800;color:var(--ink-2)}
+.bb .on-top{position:relative;margin-bottom:-6px;translate:var(--shift, 0) 0;animation:cardIn .5s .8s var(--ease-spring) both}
+/* Share ring */
+.ring{position:absolute;left:50%;top:20px;width:230px;height:230px;margin-left:-115px;border-radius:50%;border:3px solid var(--ink);background:conic-gradient(var(--c) calc(var(--p) * 1%), var(--paper) 0);box-shadow:0 5px 0 var(--ink);animation:spinIn .8s var(--ease-out) both}
+.ring .hole{position:absolute;inset:34px;border-radius:50%;background:var(--paper);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center}
+@keyframes spinIn{from{transform:rotate(-120deg) scale(.7);opacity:0}}
+.ring-pct{position:absolute;left:50%;top:232px;transform:translateX(-50%) rotate(-4deg);padding:4px 14px;border-radius:999px;background:var(--ink);color:#fff;font-family:var(--head);font-size:26px;font-weight:800;animation:stamp .5s .6s var(--ease-spring) both;z-index:3}
+/* Home vs out */
+.hv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hv-box{padding:14px;border-radius:18px;border:2.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);display:flex;flex-direction:column;gap:2px;animation:polaIn .5s var(--ease-spring) both}
+.hv-box:nth-child(2){animation-delay:.1s}
+.hv-box b{font-family:var(--head);font-size:44px;line-height:1;margin-top:6px}
+.hv-box span{font-size:15px;font-weight:800}
+.st-split{margin-top:12px;height:44px}
+/* Trips */
+.route{position:absolute;inset:0;width:100%;height:100%}
+/* Five-star grid */
+.star-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 10px;padding:8px 4px 0}
+.sg{position:relative;padding:5px;background:var(--white);border:2.5px solid var(--ink);border-radius:12px;box-shadow:0 3px 0 var(--ink);transform:rotate(var(--r));animation:polaIn .5s var(--ease-spring) both;animation-delay:var(--d)}
+.sg img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;display:block}
+.sg i{position:absolute;top:-10px;right:-10px;width:30px;height:30px;border-radius:50%;background:#FFC93C;border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-style:normal;font-size:16px;animation:stamp .4s var(--ease-spring) both;animation-delay:calc(var(--d) + .35s)}
+/* Mini poster */
+.mini-poster{position:absolute;left:50%;top:8px;width:220px;margin-left:-110px;padding:12px;background:var(--paper);border:3px solid var(--ink);border-radius:16px;box-shadow:0 6px 0 var(--ink);transform:rotate(-3deg);display:flex;flex-direction:column;gap:6px;animation:polaIn .6s var(--ease-spring) both}
+.mini-poster small{font-size:9px;font-weight:800;letter-spacing:.1em}
+.mini-poster b{font-family:var(--head);font-size:20px;line-height:1}
+.mp-photos{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mp-photos img{width:100%;aspect-ratio:1.2;object-fit:cover;border-radius:6px;border:1.5px solid var(--ink)}
+.mp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.mp-stats i{font-style:normal;font-family:var(--head);font-size:18px;font-weight:800;line-height:1;padding:5px;border-radius:8px;border:1.5px solid var(--ink);background:var(--yellow)}
+.mp-stats small{display:block;font-family:var(--body);font-size:10px}
+.st-card > .btn{margin-top:4px}
+.st-card > .link{align-self:center;min-height:36px}
+
+.st-bars{display:flex;align-items:flex-end;gap:4px;height:120px}
+.st-bars i{flex:1;border-radius:6px 6px 3px 3px;border:2px solid var(--ink);background:var(--paper);height:var(--h);animation:grow .7s var(--ease-out) both;animation-delay:calc(var(--k) * 50ms + .2s)}
+.st-bars i.top{background:var(--blue)}
+
+/* Poster */
+.posterview{position:absolute;inset:0 0 86px;z-index:5;background:var(--paper);display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);visibility:hidden;transition:transform .36s var(--ease-out),visibility 0s .36s}
+.posterview.on{transform:none;visibility:visible;transition:transform .36s var(--ease-out),visibility 0s}
+.pv-head{flex:none;padding:46px 14px 8px;display:grid;grid-template-columns:44px 1fr 44px;align-items:center}
+.pv-head h1{margin:0;text-align:center;font-family:var(--head);font-size:22px;font-weight:800}
+.pv-body{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:6px 18px 22px;display:flex;flex-direction:column;gap:14px}
+.poster{position:relative;padding:16px 14px 14px;display:flex;flex-direction:column;gap:10px;transform:rotate(-1deg);--sk-r:20px;--sk-bg:var(--yellow);--sk-sh:0 6px 0 var(--ink);overflow:hidden}
+.poster::after{content:"";position:absolute;inset:0;background-image:radial-gradient(rgba(31,42,68,.12) 1.5px,transparent 1.6px);background-size:18px 18px;pointer-events:none;border-radius:20px}
+.poster > *{position:relative;z-index:1}
+.poster small{font-size:11px;font-weight:800;letter-spacing:.1em}
+.poster h2{margin:0;font-family:var(--head);font-size:34px;line-height:.98;max-width:220px}
+.poster .pal{position:absolute;right:6px;top:4px}
+.collage{position:relative;height:200px;margin:2px 0 4px}
+.collage span{position:absolute;width:33%;padding:4px;background:var(--white);border:2px solid var(--ink);border-radius:10px;box-shadow:0 3px 0 var(--ink)}
+.collage img{width:100%;aspect-ratio:1.15;object-fit:cover;border-radius:6px;display:block}
+.ptiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.ptiles div{padding:7px 9px;border-radius:12px;border:2px solid var(--ink);background:var(--c)}
+.ptiles b{display:block;font-family:var(--head);font-size:24px;line-height:1}
+.ptiles span{font-size:12px;font-weight:800}
+.pbig{display:grid;grid-template-columns:1.15fr 1fr;gap:7px}
+.pbig div{padding:9px;border-radius:12px;border:2px solid var(--ink);display:flex;align-items:center;gap:8px;min-width:0}
+.pbig img{width:46px;height:46px;border-radius:50%;border:2px solid var(--ink);object-fit:cover;flex:none}
+.pbig small{display:block;font-size:10px;letter-spacing:.08em}
+.pbig b{display:block;font-family:var(--head);font-size:17px;line-height:1.1}
+.pbig em{font-style:normal;font-size:12px;font-weight:800}
+.pv-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pv-btns .btn{flex-direction:row;gap:8px}
+
 /* ---------- Overlays ---------- */
 .scrim{position:absolute;inset:0;z-index:20;background:rgba(31,42,68,.45);opacity:0;pointer-events:none;transition:opacity .3s}
 .scrim.on{opacity:1;pointer-events:auto}
@@ -675,6 +1200,15 @@ button.arow:hover{background:rgba(31,42,68,.06)}
         <li><button data-jump="week"><span class="n">◷</span>Calendar · Week</button></li>
         <li><button data-jump="day"><span class="n">◷</span>Calendar · Day</button></li>
         <li><button data-jump="timeline"><span class="n">☰</span>Timeline</button></li>
+        <li><button data-jump="map"><span class="n">⌖</span>Map</button></li>
+        <li><button data-jump="rediscover"><span class="n">⤨</span>Rediscover</button></li>
+        <li class="branch"><button data-jump="wander">Wander</button></li>
+        <li class="branch"><button data-jump="collections">Collections</button></li>
+        <li class="branch"><button data-jump="collection">A collection</button></li>
+        <li class="branch"><button data-jump="new-coll">New collection</button></li>
+        <li><button data-jump="plated"><span class="n">✪</span>Plated</button></li>
+        <li class="branch"><button data-jump="plated-story">Story mode</button></li>
+        <li class="branch"><button data-jump="poster">Poster</button></li>
         <li><button data-jump="settings"><span class="n">⚙</span>Settings</button></li>
         <li><button data-jump="add-source"><span class="n">+</span>Add a meal</button></li>
         <li class="branch"><button data-jump="add-camera">Take a photo</button></li>
@@ -837,6 +1371,14 @@ button.arow:hover{background:rgba(31,42,68,.06)}
             <button class="fab sk" id="fab" data-act="add-meal" aria-label="Add a meal"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg><span class="plus" aria-hidden="true">+</span></button>
 
             <div class="view" id="v-timeline" hidden></div>
+            <div class="view" id="v-map" hidden></div>
+            <div class="view" id="v-rediscover" hidden></div>
+            <div class="view" id="v-plated" hidden></div>
+            <section class="collview" id="v-coll" aria-label="Collection"></section>
+            <section class="posterview" id="v-poster" aria-label="Your poster"></section>
+            <section class="ncview" id="v-newcoll" role="dialog" aria-label="New collection"></section>
+            <section class="wanderview" id="v-wander" role="dialog" aria-label="Wander"></section>
+            <section class="storyview" id="v-story" role="dialog" aria-label="Your Plated story"></section>
             <section class="mealview" id="v-meal" aria-label="Meal detail"></section>
             <section class="editview" id="v-edit" aria-label="Edit day"></section>
             <input type="date" id="editMove" class="sr-only" tabindex="-1" aria-hidden="true" min="2026-01-01" max="2026-10-17">
@@ -875,9 +1417,9 @@ button.arow:hover{background:rgba(31,42,68,.06)}
             <nav class="tabbar sk" aria-label="Main">
               <button class="tab" data-tab="cal" aria-current="page"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
               <button class="tab" data-tab="timeline"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="7" rx="2"/><rect x="4" y="12" width="16" height="4" rx="1.5"/><rect x="4" y="18" width="16" height="3" rx="1.5"/></svg>Timeline</button>
-              <button class="tab" data-tab="Map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</button>
-              <button class="tab" data-tab="Rediscover"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3"/></svg>Rediscover</button>
-              <button class="tab" data-tab="Plated"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6l1.3 2.7 2.9.4-2.1 2 .5 2.9-2.6-1.4-2.6 1.4.5-2.9-2.1-2 2.9-.4z"/></svg>Plated</button>
+              <button class="tab" data-tab="map"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Map</button>
+              <button class="tab" data-tab="rediscover"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3"/></svg>Rediscover</button>
+              <button class="tab" data-tab="plated"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.6l1.3 2.7 2.9.4-2.1 2 .5 2.9-2.6-1.4-2.6 1.4.5-2.9-2.1-2 2.9-.4z"/></svg>Plated</button>
             </nav>
           </section>
 
@@ -1305,7 +1847,7 @@ const dayKey = c => (c.y ?? YEAR) * 10000 + c.m * 100 + c.d;
 function addDays(c, n){ const t = toDate(c); t.setDate(t.getDate() + n); return {m: t.getMonth(), d: t.getDate(), y: t.getFullYear()}; }
 const mondayOf = c => addDays(c, -((toDate(c).getDay() + 6) % 7));
 const mondayIndex = m => (dateOf(m, 1).getDay() + 6) % 7;
-const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const plural = (n, w) => `${n} ${n === 1 ? w : w.endsWith('y') && !/[aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w + 's'}`;
 
 function defaultDay(m){
   if (m === TODAY.m && mealsOn(m, TODAY.d).length) return TODAY.d;
@@ -1331,6 +1873,48 @@ const stars = n => '★'.repeat(n) + '☆'.repeat(5 - n);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
 const placeLabel = p => PLACES[p] ? `${p}, ${PLACES[p]}` : p;
 
+/* ---------- Motion ---------- */
+const VIEW_DEPTH = {year: 0, month: 1, week: 2, day: 3};
+const zoomOf = () => parseFloat($('#deviceScale').style.zoom) || 1;
+// Where the last tap landed, so zooms can grow out of it
+document.addEventListener('pointerdown', e => { S.lastPt = {x: e.clientX, y: e.clientY}; }, true);
+// A rect inside the phone, in the phone's own (unzoomed) pixels
+function phoneRect(el){
+  const r = el.getBoundingClientRect(), ph = $('#phone').getBoundingClientRect(), z = zoomOf();
+  return {left: (r.left - ph.left) / z, top: (r.top - ph.top) / z, width: r.width / z, height: r.height / z};
+}
+// Slide or fade between two full-screen views; the old one stays visible until the new one has arrived
+function swapViews(from, to, kind){
+  if (!from || from === to || REDUCED || !kind) return;
+  const K = {
+    push: [[{transform: 'translateX(100%)'}, {transform: 'none'}], [{transform: 'none'}, {transform: 'translateX(-28%)', opacity: .5}]],
+    pop: [[{transform: 'translateX(-28%)', opacity: .5}, {transform: 'none', opacity: 1}], [{transform: 'none'}, {transform: 'translateX(100%)'}]],
+    fade: [[{opacity: 0, transform: 'translateY(10px)'}, {opacity: 1, transform: 'none'}], [{opacity: 1}, {opacity: 0}]],
+  }[kind];
+  const opts = {duration: kind === 'fade' ? 260 : 360, easing: 'cubic-bezier(.2,.8,.2,1)'};
+  from.hidden = false;
+  from.style.zIndex = kind === 'pop' ? 3 : 1;
+  to.style.zIndex = kind === 'pop' ? 1 : 2;
+  const inA = to.animate(K[0], opts), out = from.animate(K[1], opts);
+  // Safety net: if frames stall (a busy page, a background tab), land on the end state anyway
+  const guard = setTimeout(() => { inA.cancel(); out.cancel(); }, opts.duration + 200);
+  out.onfinish = out.oncancel = () => { clearTimeout(guard); from.style.zIndex = to.style.zIndex = ''; if (from !== visibleView()) from.hidden = true; };
+}
+const visibleView = () => S.settings ? $('#v-settings') : $('#v-' + ((S.tab || 'cal') === 'cal' ? 'cal' : S.tab));
+
+// A photo flies from one place to another (used to open and close Meal detail)
+function flyPhoto(src, fromEl, toRect, fromRadius, toRadius, done){
+  const a = phoneRect(fromEl), b = toRect;
+  const fly = document.createElement('img');
+  fly.src = src; fly.className = 'flyer';
+  $('#phone').append(fly);
+  const anim = fly.animate([
+    {left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px', borderRadius: fromRadius},
+    {left: b.left + 'px', top: b.top + 'px', width: b.width + 'px', height: b.height + 'px', borderRadius: toRadius},
+  ], {duration: 400, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards'});
+  anim.onfinish = () => { done?.(); requestAnimationFrame(() => fly.remove()); };
+}
+
 /* ---------- Calendar: shell ---------- */
 function enterApp(){
   S.settings = false;
@@ -1344,29 +1928,66 @@ function enterApp(){
   }
 }
 
-function renderApp({slide = null, reveal = false, keepScroll = false} = {}){
+function renderApp({slide = null, reveal = false, keepScroll = false, swap = null} = {}){
+  // The view on screen before this render (state has usually changed already)
+  const before = S.shown || visibleView();
   const tab = S.tab || 'cal';
   $('#v-cal').hidden = S.settings || tab !== 'cal';
   $('#v-timeline').hidden = S.settings || tab !== 'timeline';
+  $('#v-map').hidden = S.settings || tab !== 'map';
+  $('#v-rediscover').hidden = S.settings || tab !== 'rediscover';
+  $('#v-plated').hidden = S.settings || tab !== 'plated';
   $('#v-settings').hidden = !S.settings;
   const fab = !S.settings && !S.meal && tab === 'cal' && (S.view === 'month' || S.view === 'week');
   $('#fab').hidden = !fab;
   $('#calBody').classList.toggle('has-fab', fab);
   $$('.tab').forEach(b => b.dataset.tab === tab ? b.setAttribute('aria-current','page') : b.removeAttribute('aria-current'));
-  if (tab === 'timeline'){ if (!S.settings) renderTimeline(keepScroll); return syncPanel(); }
-  renderHead();
+  swapViews(before, visibleView(), swap);
+  S.shown = visibleView();
+  if (tab === 'timeline'){ if (!S.settings) renderTimeline(keepScroll, swap === 'fade'); return syncPanel(); }
+  if (tab === 'rediscover' || tab === 'plated'){
+    if (!S.settings){
+      const body = tab === 'rediscover' ? '#rdBody' : '#plBody', sc = keepScroll ? $(body)?.scrollTop || 0 : 0;
+      (tab === 'rediscover' ? renderRediscover : renderPlated)(swap === 'fade');
+      if ($(body)) $(body).scrollTop = sc;
+    }
+    return syncPanel();
+  }
+  if (tab === 'map'){
+    if (!S.settings){
+      S.mapCity ??= 'World';
+      renderMap({drop: swap === 'fade' && !S.mapFocus});
+      if (S.mapFocus){ S.mapFocus = false; const sel = S.mapSel; S.mapSel = null; requestAnimationFrame(() => selectPin(sel)); }
+    }
+    return syncPanel();
+  }
   const body = $('#calBody');
+  const viewChanged = S.lastView && S.view !== S.lastView;
+  const dayChanged = !viewChanged && !slide && S.lastDay && S.lastDay !== `${S.cur.m}-${S.cur.d}`;
+  let anim = null, titleAnim = null;
+  if (slide){ anim = 'slide-' + slide; titleAnim = 't-' + slide; }
+  else if (viewChanged){ anim = VIEW_DEPTH[S.view] > VIEW_DEPTH[S.lastView] ? 'zoom-in' : 'zoom-out'; titleAnim = 't-swap'; }
+  else if (dayChanged && S.view === 'month') anim = 'day-swap';
+  else if (S.refilter){ anim = 'refilter'; S.refilter = false; }
+  else if (!S.lastView) anim = 'view-in';
+  // Grow the new view out of the spot that was tapped (or shrink back towards it)
+  if (anim?.startsWith('zoom') && S.lastPt){
+    const r = body.getBoundingClientRect(), z = zoomOf();
+    const x = Math.min(Math.max(S.lastPt.x - r.left, 0), r.width) / z, y = Math.min(Math.max(S.lastPt.y - r.top, 0), r.height) / z;
+    body.style.transformOrigin = `${x}px ${y}px`;
+  } else body.style.transformOrigin = '50% 0';
+  S.lastView = S.view; S.lastDay = `${S.cur.m}-${S.cur.d}`;
+  renderHead(REDUCED ? null : titleAnim);
   body.innerHTML = {year: yearBody, month: monthBody, week: weekBody, day: dayBody}[S.view](reveal);
-  const anim = REDUCED ? null : slide ? 'slide-' + slide : S.view !== S.lastView ? 'view-in' : null;
-  S.lastView = S.view;
-  body.classList.remove('slide-next','slide-prev','view-in');
-  if (anim){ void body.offsetWidth; body.classList.add(anim); }
+  if (anim === 'refilter') $$('.ydots .dot', body).forEach((el, k) => el.style.setProperty('--k', k % 40));
+  body.classList.remove('slide-next','slide-prev','view-in','zoom-in','zoom-out','day-swap','refilter');
+  if (anim && !REDUCED){ void body.offsetWidth; body.classList.add(anim); }
   if (!keepScroll) body.scrollTop = 0;
   syncPanel();
 }
 
 // Same structure in every view (‹ title › · Today · Settings), so only the words change
-function renderHead(){
+function renderHead(titleAnim = null){
   const {m, d} = S.cur;
   let eyebrow, title;
   if (S.view === 'year'){ eyebrow = 'Your year'; title = YEAR; }
@@ -1390,6 +2011,7 @@ function renderHead(){
   // Shrink long titles (e.g. September) to fit between the arrows
   const big = $('#headRow .big'), box = $('#headRow .title-btn');
   for (let size = 28; size > 18 && big.scrollWidth > box.clientWidth; size -= 1) big.style.fontSize = size - 1 + 'px';
+  if (titleAnim) box.classList.add(titleAnim);
   const i = ['year','month','week','day'].indexOf(S.view);
   $('#zoom').style.setProperty('--i', i);
   $$('#zoom button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === S.view));
@@ -1666,11 +2288,13 @@ function useAccess(kind){
 function reset(){
   clearInterval(S.scanTimer);
   closeOverlay(true);
-  Object.assign(S, {access:null, picked:new Set(), revealed:false, history:['welcome'], view:'month', tab:'cal', tlSize:'grid', meal:null, editDay:null, yearMode:'home', cuisines:new Set(), cur:{...TODAY}, settings:false, remind:true, appStep:'home'});
+  Object.assign(S, {access:null, picked:new Set(), revealed:false, history:['welcome'], view:'month', tab:'cal', rdSeg:'surprise', surprise:null, seenSurprise:null, collsSeeded:false, userColls:[], pinned:new Set(), collFilter:'all', collQuery:'', coll:null, nc:null, wander:null, story:null, poster:false, plPeriod:'year', plMonth:null, plTrip:null, tlSize:'grid', mapCity:'World', world:null, mapSel:null, mapPan:null, mapHeat:false, mapAll:false, meal:null, editDay:null, yearMode:'home', cuisines:new Set(), cur:{...TODAY}, settings:false, remind:true, appStep:'home'});
   setLibrary([]);
   S.suspects = new Map(); S.editDay = null;
   $('#v-meal').classList.remove('on');
   $('#v-edit').classList.remove('on');
+  $$('#v-coll, #v-poster, #v-newcoll, #v-wander, #v-story').forEach(el => el.classList.remove('on'));
+  clearTimeout(storyTimer);
   $('#remindSw').setAttribute('aria-checked','true');
 }
 
@@ -1702,13 +2326,18 @@ const ACTIONS = {
   'see-calendar': () => { S.history = ['app']; show('app'); },
   'local-ok': () => { S.appStep = 'home'; closeOverlay(); setTimeout(() => toast('Saved on this phone only'), 250); },
   'today': goToday,
+  'shuffle': () => shuffleSurprise(),
+  'wander': () => openWander(),
+  'new-coll': () => openNewColl(),
+  'story': () => openStory(),
+  'poster': () => openPoster(),
   'clear-cuisines': () => { S.cuisines.clear(); renderApp({keepScroll: true}); },
   'jump': openJump,
   'prev': () => step(-1),
   'next': () => step(1),
   'open-day': () => openDay(S.cur.m, S.cur.d),
-  'open-settings': () => { S.settings = true; renderSettings(); renderApp(); },
-  'close-settings': () => { S.settings = false; renderApp(); },
+  'open-settings': () => { S.settings = true; renderSettings(); renderApp({swap: 'push', keepScroll: true}); $('#v-settings .set-body').scrollTop = 0; },
+  'close-settings': () => { S.settings = false; renderApp({swap: 'pop', keepScroll: true}); },
   'add-meal': () => openAdd(),
   'edit-day': () => openEdit(S.cur),
   'undo-delete': () => {
@@ -2000,19 +2629,42 @@ const MI = {
   chevron: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2450B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
 };
 
-function openMeal(id){
+function openMeal(id, fromImg = null){
   Object.assign(S, {meal: id, noteEdit: false, againOpen: false});
   renderMeal();
-  $('#v-meal').classList.add('on');
+  const v = $('#v-meal');
+  const morph = fromImg && !REDUCED && !v.classList.contains('on');
+  v.classList.toggle('morph', !!morph);
+  v.classList.remove('landed');
+  if (morph){
+    flyPhoto(fromImg.src, fromImg, {left: 0, top: 0, width: 390, height: 300}, getComputedStyle(fromImg).borderRadius, '0px', () => v.classList.add('landed'));
+  }
+  v.classList.add('on');
   $('#statusbar').classList.add('light');
   $('#fab').hidden = true;
   syncPanel();
 }
 function closeMeal(){
+  const id = S.meal, v = $('#v-meal'), hero = $('.mhero img', v);
   S.meal = null;
-  $('#v-meal').classList.remove('on');
   $('#statusbar').classList.remove('light');
   renderApp({keepScroll: true});
+  if (S.coll){ const sc = $('#v-coll .cv-scroll').scrollTop; renderColl(); $('#v-coll .cv-scroll').scrollTop = sc; }
+  // Fly back to the same photo if it's on screen, otherwise slide away
+  const scope = $('#v-coll.on') || document;
+  const target = !REDUCED && $$(`[data-meal="${id}"] img`, scope).find(el => {
+    const r = el.getBoundingClientRect(), view = el.closest('.view, .collview')?.getBoundingClientRect();
+    return r.width && view && r.top >= view.top && r.bottom <= view.bottom;
+  });
+  if (target && hero){
+    v.classList.add('morph'); v.classList.remove('landed');
+    target.style.visibility = 'hidden';
+    flyPhoto(hero.src, hero, phoneRect(target), '0px', getComputedStyle(target).borderRadius, () => { target.style.visibility = ''; });
+    v.classList.remove('on');
+  } else {
+    v.classList.remove('morph');
+    v.classList.remove('on');
+  }
 }
 // Re-render without losing the scroll position
 function refreshMeal(){
@@ -2052,7 +2704,7 @@ function renderMeal(){
         <div class="mtitle-row"><h1 class="mtitle">${esc(x.name)}</h1><span id="mPal">${pal(palFor(x.cuisine), ratingMood(x.rating), 78, {left: true})}</span></div>
         <div class="mchips">
           <button class="mchip sk" data-mact="day" style="--sk-bg:${SLOT_COLOR[x.slot]}" aria-label="Open ${fmtLong(date)}">${MI.cal}${fmtShort(date)} · ${x.slot}</button>
-          ${x.home ? '' : `<button class="mchip sk" data-mact="place" style="--sk-bg:#BFDBFF">${MI.pin}${esc(placeLabel(x.place))}</button>`}
+          <button class="mchip sk" data-mact="place" style="--sk-bg:#BFDBFF" aria-label="Show ${esc(x.home ? 'home' : x.place)} on the map">${MI.pin}${esc(x.home ? 'Home' : AREA[x.place] ? `${x.place}, ${AREA[x.place]}` : placeLabel(x.place))}</button>
           ${x.cuisine ? `<span class="mchip sk"><span class="dot" style="background:${CUISINES[x.cuisine]}"></span>${esc(x.cuisine)}</span>` : ''}
           <span class="mchip sk">${x.home ? 'Home' : 'Out'}</span>
         </div>
@@ -2114,7 +2766,7 @@ $('#v-meal').addEventListener('click', e => {
     return toast('Meal deleted', 'pal:nellie:meh', {label: 'Undo', act: 'undo-delete'});
   }
   if (act === 'day'){ S.cur = {m: x.m, d: x.d}; S.view = 'day'; S.tab = 'cal'; return closeMeal(); }
-  if (act === 'place') return toast('Map is a separate mockup', 'info');
+  if (act === 'place') return showOnMap(x.place, x.home);
   if (act === 'note-edit'){ S.noteEdit = true; refreshMeal(); const ta = $('#mNote'); ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); return; }
   if (act === 'note-cancel'){ S.noteEdit = false; return refreshMeal(); }
   if (act === 'note-save'){ x.note = $('#mNote').value.trim(); S.noteEdit = false; refreshMeal(); return toast('Notes saved'); }
@@ -2408,7 +3060,7 @@ function placeSummary(ms){
   return places.length > 1 ? `${places[0]} & ${places.length - 1} more` : places[0];
 }
 
-function renderTimeline(keepScroll){
+function renderTimeline(keepScroll, enter = false){
   const sc = $('#tlScroll')?.scrollTop || 0;
   const days = timelineDays(), large = S.tlSize === 'large';
   const first = days[days.length - 1];
@@ -2457,6 +3109,7 @@ function renderTimeline(keepScroll){
     </div>`;
   const scroll = $('#tlScroll');
   scroll.scrollTop = keepScroll ? sc : 0;
+  if (enter && !REDUCED) scroll.classList.add('enter');
   scroll.addEventListener('scroll', syncRail, {passive: true});
   syncRail();
 }
@@ -2518,9 +3171,11 @@ function syncRail(){
 
 function setTab(tab){
   if (S.meal) { S.meal = null; $('#v-meal').classList.remove('on'); $('#statusbar').classList.remove('light'); }
-  const was = S.tab;
+  if (S.coll){ S.coll = null; $('#v-coll').classList.remove('on'); }
+  if (S.poster){ S.poster = false; $('#v-poster').classList.remove('on'); }
+  const was = S.tab, wasSettings = S.settings;
   S.tab = tab; S.settings = false;
-  renderApp({keepScroll: was === tab});
+  renderApp({keepScroll: was === tab, swap: wasSettings ? 'pop' : was !== tab ? 'fade' : null});
 }
 
 /* ---------- Platter Pals ---------- */
@@ -2551,18 +3206,1375 @@ function palTalk(el, ms = 1600){
 }
 document.addEventListener('click', e => { const el = e.target.closest('[data-pal]'); if (el) palTalk(el); }, true);
 
+/* ---------- Map ---------- */
+// Neighbourhoods, for the map and the place chip on Meal detail
+const AREA = {
+  'Trattoria Fico':'Soho', 'Bar Tapa':'Soho', 'Hoshi':'Soho', 'Pasta Lab':'Soho',
+  'Sunday Café':'Islington', 'Pastelaria Sol':'Islington', 'The Teapot Café':'Islington',
+  'Smokehouse 52':'Shoreditch', 'The Crown':'Peckham',
+  'Café Ribeira':'Ribeira', 'O Polvo':'Ribeira', 'Taberna do Largo':'Baixa',
+  'Taverna Meltemi':'Agios Georgios', 'Limani':'Chora',
+};
+const cityOf = x => x.home ? 'London' : PLACES[x.place] || 'London';
+const W_MAP = 600, H_MAP = 760;
+
+// Hand-drawn maps. Pins and labels are in canvas pixels.
+const CITY_MAPS = {
+  London: {
+    dot: '#2F5FD0', pal: ['sippy', 'snap', 'Wait, look!'], start: [235, 300],
+    pins: {'Hoshi':[232,300], 'Trattoria Fico':[168,322], 'Bar Tapa':[104,292], 'Pasta Lab':[176,238],
+      'Sunday Café':[268,160], 'Pastelaria Sol':[372,168], 'The Teapot Café':[318,222],
+      'Smokehouse 52':[478,322], 'The Crown':[318,572], Home:[132,612]},
+    spare: [[430,560],[500,640],[392,660],[540,470]],
+    labels: [['SOHO',150,196],['ISLINGTON',320,104],['SHOREDITCH',478,262],['PECKHAM',318,640],['BRIXTON',132,690],
+      ["Regent's Park",104,128,'park'],['Victoria Park',512,176,'park'],['Peckham Rye',448,690,'park'],['Thames',62,402,'water']],
+    svg: `<rect x="-10" y="-10" width="620" height="780" fill="#F6EFD9"/>
+      <g fill="none"><path id="lroads" d="M-10 200 C 150 190, 350 205, 610 185 M180 -10 C 190 150, 200 300, 215 420 M396 -10 C 386 150, 406 300, 424 420 M-10 300 C 80 290, 120 262, 182 250 M226 466 C 262 530, 282 610, 292 770 M436 456 C 466 540, 506 620, 546 770 M-10 560 C 150 540, 350 560, 610 530 M520 -10 C 510 120, 560 220, 610 262 M-10 640 C 60 630, 100 600, 130 560" stroke="#E2D3AE" stroke-width="12"/>
+        <path d="M-10 200 C 150 190, 350 205, 610 185 M180 -10 C 190 150, 200 300, 215 420 M396 -10 C 386 150, 406 300, 424 420 M-10 300 C 80 290, 120 262, 182 250 M226 466 C 262 530, 282 610, 292 770 M436 456 C 466 540, 506 620, 546 770 M-10 560 C 150 540, 350 560, 610 530 M520 -10 C 510 120, 560 220, 610 262 M-10 640 C 60 630, 100 600, 130 560" stroke="#FFFFFF" stroke-width="6"/></g>
+      <g fill="#9FDDC4" stroke="#1F2A44" stroke-width="2.5"><path d="M40 130 C 40 98, 92 90, 132 98 C 168 106, 174 146, 152 164 C 130 182, 70 178, 50 160 C 42 152, 40 142, 40 130 Z"/><path d="M452 166 C 466 146, 548 144, 576 160 L 586 196 C 560 210, 488 208, 462 194 C 450 186, 446 176, 452 166 Z"/><path d="M402 676 C 416 650, 480 650, 498 672 C 510 690, 490 716, 452 718 C 420 720, 394 700, 402 676 Z"/><path d="M58 716 C 70 692, 130 690, 150 708 C 160 724, 140 744, 104 744 C 76 744, 52 734, 58 716 Z"/></g>
+      <g fill="#2BB3A3" stroke="#1F2A44" stroke-width="1.5"><circle cx="70" cy="122" r="5"/><circle cx="120" cy="150" r="4.5"/><circle cx="540" cy="186" r="4.5"/><circle cx="470" cy="694" r="4.5"/><circle cx="90" cy="724" r="4.5"/></g>
+      <path d="M-20 440 C 80 398, 160 392, 232 430 S 380 494, 452 448 S 562 400, 622 424" fill="none" stroke="#1F2A44" stroke-width="40"/>
+      <path d="M-20 440 C 80 398, 160 392, 232 430 S 380 494, 452 448 S 562 400, 622 424" fill="none" stroke="#9CC8FF" stroke-width="34"/>
+      <path d="M40 416 q8 -5 16 0 M268 448 q8 -5 16 0 M500 426 q8 -5 16 0 M150 410 q8 -5 16 0" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+      <path d="M206 398 L 214 452 M422 438 L 428 494" stroke="#1F2A44" stroke-width="8"/><path d="M206 398 L 214 452 M422 438 L 428 494" stroke="#F6EFD9" stroke-width="4"/>`,
+  },
+  Porto: {
+    dot: '#E5483B', pal: ['donut', 'love', 'Treat day!'], start: [252, 380],
+    pins: {'O Polvo':[208,356], 'Café Ribeira':[320,428], 'Taberna do Largo':[404,330]},
+    spare: [[480,280],[260,260],[520,380]],
+    labels: [['BAIXA',350,236],['RIBEIRA',262,468],['VILA NOVA DE GAIA',380,640],['FOZ',96,330],['Atlantic',36,600,'water'],['Douro',520,540,'water'],['Palácio de Cristal',150,430,'park'],['Jardim do Morro',470,610,'park']],
+    svg: `<rect x="-10" y="-10" width="620" height="780" fill="#F6EFD9"/>
+      <path d="M-10 -10 L 66 -10 C 54 120, 80 240, 58 380 C 40 500, 74 620, 52 770 L -10 770 Z" fill="#9CC8FF" stroke="#1F2A44" stroke-width="3"/>
+      <path d="M12 140 q8 -5 16 0 M18 460 q8 -5 16 0 M10 680 q8 -5 16 0" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+      <g fill="none"><path d="M60 300 C 200 290, 320 300, 610 270 M300 -10 C 310 120, 330 260, 340 470 M440 -10 C 430 140, 420 260, 412 470 M150 -10 C 170 120, 180 220, 200 320 M120 600 C 260 600, 400 640, 610 630 M380 560 C 400 640, 420 700, 430 770" stroke="#E2D3AE" stroke-width="12"/>
+        <path d="M60 300 C 200 290, 320 300, 610 270 M300 -10 C 310 120, 330 260, 340 470 M440 -10 C 430 140, 420 260, 412 470 M150 -10 C 170 120, 180 220, 200 320 M120 600 C 260 600, 400 640, 610 630 M380 560 C 400 640, 420 700, 430 770" stroke="#FFFFFF" stroke-width="6"/></g>
+      <g fill="#9FDDC4" stroke="#1F2A44" stroke-width="2.5"><path d="M98 404 C 112 384, 190 384, 206 404 C 214 420, 196 446, 150 446 C 116 446, 90 426, 98 404 Z"/><path d="M430 594 C 444 576, 504 576, 516 594 C 524 610, 504 628, 472 628 C 444 628, 424 612, 430 594 Z"/></g>
+      <path d="M44 524 C 150 494, 250 516, 330 490 S 480 466, 622 498" fill="none" stroke="#1F2A44" stroke-width="44"/>
+      <path d="M44 524 C 150 494, 250 516, 330 490 S 480 466, 622 498" fill="none" stroke="#9CC8FF" stroke-width="38"/>
+      <path d="M140 506 q8 -5 16 0 M470 482 q8 -5 16 0" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+      <path d="M380 452 L 386 530 M380 452 Q 383 500 386 530" stroke="#1F2A44" stroke-width="9"/><path d="M380 452 L 386 530" stroke="#C49A6C" stroke-width="5"/>
+      <path d="M362 532 Q 384 478 408 532" fill="none" stroke="#1F2A44" stroke-width="3.5"/>`,
+  },
+  Naxos: {
+    dot: '#2BB3A3', pal: ['bao', 'love', 'So yummy!'], start: [240, 390],
+    pins: {'Limani':[226,346], 'Taverna Meltemi':[318,470]},
+    spare: [[400,300],[440,420],[360,580]],
+    labels: [['CHORA',300,300],['AGIOS GEORGIOS',356,540],['Portara',108,232,'park'],['Aegean Sea',110,560,'water']],
+    svg: `<rect x="-10" y="-10" width="620" height="780" fill="#9CC8FF"/>
+      <path d="M40 90 q8 -5 16 0 M90 420 q8 -5 16 0 M60 660 q8 -5 16 0 M250 720 q8 -5 16 0 M160 160 q8 -5 16 0" fill="none" stroke="#FFFFFF" stroke-width="2.5"/>
+      <path d="M210 -10 C 200 80, 240 160, 220 230 C 204 290, 176 320, 196 372 C 214 420, 256 450, 262 512 C 268 580, 230 650, 280 720 L 300 770 L 610 770 L 610 -10 Z" fill="#F6EFD9" stroke="#1F2A44" stroke-width="3"/>
+      <path d="M262 512 C 270 560, 248 610, 270 660" fill="none" stroke="#FFE8B0" stroke-width="16"/>
+      <g fill="none"><path d="M200 360 C 300 350, 400 340, 610 300 M240 200 C 320 260, 360 420, 380 770 M300 470 C 400 470, 500 500, 610 520" stroke="#E2D3AE" stroke-width="12"/><path d="M200 360 C 300 350, 400 340, 610 300 M240 200 C 320 260, 360 420, 380 770 M300 470 C 400 470, 500 500, 610 520" stroke="#FFFFFF" stroke-width="6"/></g>
+      <path d="M120 270 C 100 250, 116 236, 134 244 C 148 252, 140 276, 120 270 Z" fill="#F6EFD9" stroke="#1F2A44" stroke-width="2.5"/>
+      <path d="M118 252 v-22 h20 v22 M114 228 h28" fill="none" stroke="#1F2A44" stroke-width="3.5"/>
+      <path d="M134 262 L 192 340" stroke="#1F2A44" stroke-width="2.5" stroke-dasharray="5 5"/>
+      <g fill="#FFFFFF" stroke="#1F2A44" stroke-width="2"><rect x="262" y="250" width="16" height="14" rx="2"/><rect x="284" y="244" width="14" height="20" rx="2"/><rect x="304" y="252" width="16" height="12" rx="2"/><rect x="272" y="270" width="18" height="12" rx="2"/></g>
+      <g fill="#9FDDC4" stroke="#1F2A44" stroke-width="2.5"><path d="M440 160 C 456 140, 520 140, 536 162 C 546 180, 524 200, 486 200 C 454 200, 432 180, 440 160 Z"/><path d="M460 610 C 474 590, 540 592, 552 612 C 560 630, 536 648, 504 648 C 474 648, 452 630, 460 610 Z"/></g>`,
+  },
+};
+
+const MI2 = {
+  flame: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4 0 7-2.7 7-6.8 0-3.2-2-5.6-3.6-7.4-.4 2-1.4 3.2-2.6 3.6.6-3.4-.8-6.6-3.8-8.9.2 3.4-1.6 5.3-3.2 7.2C4.5 11.3 5 13.6 5 15.2 5 19.3 8 22 12 22z"/></svg>',
+  spark: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="#7B5CD6" stroke="#1F2A44" stroke-width="1.6" stroke-linejoin="round"><path d="M12 2.5l2.3 6.2 6.2 2.3-6.2 2.3L12 19.5l-2.3-6.2L3.5 11l6.2-2.3z"/></svg>',
+  tip: '<svg class="tip" aria-hidden="true" width="18" height="13" viewBox="0 0 18 13"><path d="M1.5 1 L9 12 L16.5 1 Z" fill="#1F2A44"/></svg>',
+  close: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  globe: '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18"/></svg>',
+};
+
+// Every place in a city with its meals (newest first) and where its pin goes
+function mapPlaces(city){
+  const cfg = CITY_MAPS[city], groups = new Map();
+  for (const x of S.library){
+    if (cityOf(x) !== city) continue;
+    const key = x.home ? 'Home' : x.place;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(x);
+  }
+  let spare = 0;
+  return [...groups.entries()].map(([name, ms]) => {
+    ms.sort((a, b) => b.m - a.m || b.d - a.d || b.mins - a.mins);
+    const pos = cfg.pins[name] || cfg.spare[spare++ % cfg.spare.length];
+    const cuisines = {};
+    ms.forEach(x => { if (x.cuisine) cuisines[x.cuisine] = (cuisines[x.cuisine] || 0) + 1; });
+    return {name, ms, x: pos[0], y: pos[1], home: name === 'Home', cuisine: Object.keys(cuisines).sort((a, b) => cuisines[b] - cuisines[a])[0]};
+  });
+}
+function mapCities(){
+  const out = [];
+  for (const city of Object.keys(CITY_MAPS)){
+    const ms = S.library.filter(x => cityOf(x) === city);
+    if (!ms.length && city !== 'London') continue;
+    let sub = 'home';
+    if (city !== 'London'){
+      const ds = ms.map(x => x.m * 100 + x.d).sort((a, b) => a - b), a = ds[0], b = ds[ds.length - 1];
+      const fa = `${MON[Math.floor(a / 100)]} ${a % 100}`;
+      sub = a === b ? fa : Math.floor(a / 100) === Math.floor(b / 100) ? `${fa}–${b % 100}` : `${fa} – ${MON[Math.floor(b / 100)]} ${b % 100}`;
+    }
+    out.push({city, sub, n: ms.length});
+  }
+  return out;
+}
+// The neighbourhood where you eat dinner out most, drawn automatically
+function topArea(places){
+  const by = {};
+  for (const p of places) if (!p.home && AREA[p.name]){
+    const a = AREA[p.name];
+    by[a] ??= {area: a, places: [], dinners: []};
+    by[a].places.push(p);
+    by[a].dinners.push(...p.ms.filter(x => x.slot === 'Dinner'));
+  }
+  const best = Object.values(by).filter(a => a.places.length >= 2).sort((a, b) => b.dinners.length - a.dinners.length)[0];
+  return best && best.dinners.length >= 3 ? best : null;
+}
+
+function mapHeader(){
+  const cities = mapCities(), city = S.mapCity, world = city === 'World';
+  return `<header class="mp-head sk">
+      <div class="row-between"><h1>Map</h1>
+        <div class="head-btns">
+          ${world ? '' : `<button class="heat-btn sk" data-mheat aria-pressed="${!!S.mapHeat}">${MI2.flame}Where I eat most</button>`}
+          <button class="sq-btn sk" data-act="open-settings" aria-label="Settings">${I.gear}</button>
+        </div>
+      </div>
+      <div class="mp-chips" role="group" aria-label="Places and trips">
+        <button class="city world sk" data-mcity="World" aria-pressed="${world}"><span class="cdot"></span><strong>World</strong><span>· ${plural(cities.filter(c => c.n).length, 'city', )}</span></button>
+        ${cities.map(c => `<button class="city sk" data-mcity="${c.city}" aria-pressed="${c.city === city}"><span class="cdot" style="background:${CITY_MAPS[c.city].dot}"></span><strong>${c.city}</strong><span>· ${c.sub}</span></button>`).join('')}</div>
+    </header>`;
+}
+function renderMap({drop = false, from = null} = {}){
+  if (S.mapCity === 'World') return renderWorldMap(from);
+  const city = S.mapCity, cfg = CITY_MAPS[city], places = mapPlaces(city), area = topArea(places);
+  S.mapData = {places, area};
+  const heat = S.mapHeat;
+  const max = Math.max(1, ...places.map(p => p.ms.length));
+  const pins = places.map((p, k) => p.home
+    ? `<button class="mp-pin home" style="left:${p.x}px;top:${p.y}px;--k:${k}" data-mpin="Home" aria-pressed="${S.mapSel === 'Home'}" aria-label="Home, ${plural(p.ms.length, 'meal')}"><span class="disc sk"><b>${p.ms.length}</b></span>${MI2.tip}<span class="name">Home</span></button>`
+    : `<button class="mp-pin" style="left:${p.x}px;top:${p.y}px;--k:${k}" data-mpin="${esc(p.name)}" aria-pressed="${S.mapSel === p.name}" aria-label="${esc(p.name)}, ${plural(p.ms.length, 'meal')}"><span class="disc sk"><img src="${img(p.ms[0].img)}" alt=""></span>${MI2.tip}<span class="cnt">${p.ms.length}</span></button>`).join('');
+  let areaHtml = '';
+  if (area){
+    const xs = area.places.map(p => p.x), ys = area.places.map(p => p.y);
+    const l = Math.min(...xs) - 52, t = Math.min(...ys) - 54, r = Math.max(...xs) + 52, b = Math.max(...ys) + 50;
+    areaHtml = `<span class="mp-area" style="left:${l}px;top:${t}px;width:${r - l}px;height:${b - t}px"></span>
+      <button class="mp-area-tag sk" style="left:${(l + r) / 2}px;top:${b + 6}px" data-marea aria-pressed="${S.mapSel === '@area'}" aria-label="${area.area} evenings, ${plural(area.dinners.length, 'dinner')}, area drawn automatically from your meals">${MI2.spark}${area.area} evenings · ${plural(area.dinners.length, 'meal')}</button>`;
+  }
+  $('#v-map').innerHTML = mapHeader() + `
+    <div class="mp-wrap${heat ? ' heat' : ''}${from === 'world' && !REDUCED ? ' enter' : ''}" id="mpWrap" role="application" aria-label="Illustrated map of ${city}. Drag to move around; scroll or pinch out for the world map.">
+      <div class="w-zoom"><button class="sk" data-towrld aria-label="Zoom out to the world map">${MI2.globe}</button></div>
+      <div class="mp-canvas${drop && !REDUCED ? ' drop' : ''}" id="mpCanvas" style="width:${W_MAP}px;height:${H_MAP}px">
+        <svg width="${W_MAP}" height="${H_MAP}" viewBox="0 0 ${W_MAP} ${H_MAP}" aria-hidden="true"><g stroke-linecap="round" stroke-linejoin="round" filter="url(#ob-crayon)">${cfg.svg}</g></svg>
+        <div class="mp-heat${heat ? ' on' : ''}" aria-hidden="true">${places.map(p => { const sz = 70 + 170 * Math.sqrt(p.ms.length / max); return `<span style="left:${p.x}px;top:${p.y}px;width:${sz}px;height:${sz}px"></span>`; }).join('')}</div>
+        ${cfg.labels.map(([t, x, y, k]) => `<span class="mp-label${k ? ' ' + k : ''}" style="left:${x}px;top:${y}px">${esc(t)}</span>`).join('')}
+        ${areaHtml}
+        ${pins}
+      </div>
+      <section class="mp-sheet sk" id="mpSheet" aria-live="polite"></section>
+    </div>`;
+  renderMapSheet();
+  if (!S.mapPan || drop) centreMap(cfg.start[0], cfg.start[1], false);
+  else setPan(S.mapPan.x, S.mapPan.y, false);
+  $('.mp-chips [aria-pressed="true"]')?.scrollIntoView({inline: 'nearest', block: 'nearest'});
+}
+
+function renderWorldMap(from){
+  const cities = mapCities().filter(c => c.n), meals = S.library.length;
+  const cfgPal = ['taco', 'snap', 'So pretty'];
+  $('#v-map').innerHTML = mapHeader() + `
+    <div class="mp-wrap${from === 'city' && !REDUCED ? ' leave' : ''}" id="mpWrap" role="application" aria-label="World map of the places you've eaten. Drag to move, pinch or scroll to zoom, tap a marker to open a city.">
+      <svg class="w-svg" id="wSvg" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${WORLD_SVG}</svg>
+      <div class="w-labels" id="wLabels"></div>
+      <div class="w-marks" id="wMarks"></div>
+      <div class="w-zoom"><button class="sk" data-wzoom="in" aria-label="Zoom in">+</button><button class="sk" data-wzoom="out" aria-label="Zoom out">−</button></div>
+      <section class="mp-sheet sk" id="mpSheet" aria-live="polite"><span class="grab" aria-hidden="true"></span>
+        <div class="mp-peek">${pal(cfgPal[0], cfgPal[1], 58, {say: cfgPal[2]})}<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+          <h2>Your food world</h2>
+          <div class="mp-stats"><span>${plural(cities.length, 'city', )}</span><span>${plural(Math.max(0, cities.length - 1), 'trip')}</span><span>${plural(meals, 'meal')}</span></div>
+          <p>${cities.length ? 'Tap a marker to open a city, or pinch and scroll to zoom in.' : 'No meals yet. Every place you eat will land on the map.'}</p>
+        </div></div>
+      </section>
+    </div>`;
+  S.world ??= defaultWorld();
+  S.world = clampWorld(S.world);
+  renderWorld();
+}
+
+function renderMapSheet(swap = false){
+  const {places, area} = S.mapData, el = $('#mpSheet'), sel = S.mapSel;
+  const p = sel === '@area' ? null : places.find(q => q.name === sel);
+  const meal = x => `<button class="mp-meal" data-meal="${x.id}" aria-label="${esc(x.name)}, ${fmtShort(x)}"><img src="${img(x.img)}" alt="" loading="lazy"><b>${x.d} ${MON[x.m]}</b><span>${esc(x.name)}</span></button>`;
+  let html;
+  if (sel === '@area' && area){
+    const ms = [...area.dinners].sort((a, b) => b.m - a.m || b.d - a.d);
+    html = `<div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><h2>${area.area} evenings</h2><span class="sub">${plural(ms.length, 'dinner')} across ${plural(area.places.length, 'place')} · drawn from your meals</span></div><button class="x" data-mclose aria-label="Close">${MI2.close}</button></div>
+      <div class="${S.mapAll ? 'mp-all' : 'mp-row'}">${ms.map(meal).join('')}</div>
+      <div class="mp-btns"><button class="btn primary sk" data-mall>${S.mapAll ? 'Show less' : 'Every meal here'}</button></div>`;
+  } else if (p){
+    const first = p.ms[p.ms.length - 1];
+    const sub = p.home ? `${plural(p.ms.length, 'meal')} cooked at home${p.cuisine ? ` · mostly ${p.cuisine}` : ''}`
+      : `${plural(p.ms.length, 'meal')} since ${first.d} ${MON[first.m]}${p.cuisine ? ` · ${p.cuisine}` : ''}${AREA[p.name] ? ` · ${AREA[p.name]}` : ''}`;
+    html = `<div style="display:flex;align-items:flex-start;gap:10px"><div style="flex:1;min-width:0"><h2>${esc(p.name)}</h2><span class="sub">${esc(sub)}</span></div><button class="x" data-mclose aria-label="Close">${MI2.close}</button></div>
+      <div class="${S.mapAll ? 'mp-all' : 'mp-row'}">${p.ms.map(meal).join('')}</div>
+      <div class="mp-btns"><button class="btn primary sk" data-mall>${S.mapAll ? 'Show less' : 'Every meal here'}</button></div>`;
+  } else {
+    const cfg = CITY_MAPS[S.mapCity], out = places.filter(q => !q.home), home = places.find(q => q.home);
+    const outN = out.reduce((n, q) => n + q.ms.length, 0);
+    const fav = [...out].sort((a, b) => b.ms.length - a.ms.length)[0];
+    html = `<div class="mp-peek">${pal(cfg.pal[0], cfg.pal[1], 58, {say: cfg.pal[2]})}<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+        <h2>${S.mapCity}${S.mapCity === 'London' ? '' : ` · ${mapCities().find(c => c.city === S.mapCity).sub}`}</h2>
+        <div class="mp-stats"><span>${plural(out.length, 'place')}</span><span>${plural(outN, 'meal')} out</span>${home ? `<span>${home.ms.length} at home</span>` : ''}</div>
+        <p>${fav ? `Most visited: <b>${esc(fav.name)}</b>. Tap a pin to see what you ate there.` : places.length ? 'Tap a pin to see what you ate there.' : 'No meals here yet. Places you eat at will pin themselves to the map.'}</p>
+      </div></div>`;
+  }
+  el.innerHTML = '<span class="grab" aria-hidden="true"></span>' + html;
+  el.classList.remove('swap');
+  if (swap && !REDUCED){ void el.offsetWidth; el.classList.add('swap'); }
+}
+
+/* Panning: the canvas moves inside the wrap, clamped to the edges */
+function clampPan(x, y){
+  const wrap = $('#mpWrap'), sheet = $('#mpSheet');
+  const vw = wrap.clientWidth, vh = wrap.clientHeight - (sheet?.offsetHeight || 0) * .6;
+  return [Math.min(0, Math.max(vw - W_MAP, x)), Math.min(0, Math.max(Math.min(0, vh - H_MAP), y))];
+}
+function setPan(x, y, glide = true){
+  [x, y] = clampPan(x, y);
+  S.mapPan = {x, y};
+  const c = $('#mpCanvas');
+  c.classList.toggle('glide', glide && !REDUCED);
+  c.style.transform = `translate(${x}px, ${y}px)`;
+}
+// Put a canvas point in the middle of the space above the sheet
+function centreMap(cx, cy, glide = true){
+  const wrap = $('#mpWrap'), sheetH = $('#mpSheet').offsetHeight;
+  setPan(wrap.clientWidth / 2 - cx, (wrap.clientHeight - sheetH) / 2 - cy, glide);
+}
+
+function selectPin(name){
+  S.mapSel = name; S.mapAll = false;
+  $$('#mpCanvas [data-mpin]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mpin === name));
+  const tag = $('[data-marea]'); if (tag) tag.setAttribute('aria-pressed', name === '@area');
+  renderMapSheet(true);
+  if (name === '@area'){
+    const ps = S.mapData.area.places;
+    centreMap(ps.reduce((n, p) => n + p.x, 0) / ps.length, ps.reduce((n, p) => n + p.y, 0) / ps.length + 30);
+  } else if (name){
+    const p = S.mapData.places.find(q => q.name === name);
+    centreMap(p.x, p.y);
+    palTalk($(`[data-mpin="${CSS.escape(name)}"]`), 0);
+  }
+  syncPanel();
+}
+
+(() => {
+  let drag = null, moved = false;
+  const v = $('#v-map');
+  v.addEventListener('pointerdown', e => {
+    const wrap = e.target.closest('#mpWrap');
+    if (S.mapCity === 'World' || !wrap || e.target.closest('#mpSheet, .w-zoom')) return;
+    drag = {x: e.clientX, y: e.clientY, px: S.mapPan.x, py: S.mapPan.y, z: zoomOf()};
+    moved = false;
+  });
+  const fingers = new Map();
+  v.addEventListener('pointerdown', e => { if (S.mapCity !== 'World' && e.target.closest('#mpWrap')) fingers.set(e.pointerId, [e.clientX, e.clientY]); });
+  v.addEventListener('pointermove', e => {
+    if (S.mapCity !== 'World' && fingers.has(e.pointerId)){
+      const was = [...fingers.values()];
+      fingers.set(e.pointerId, [e.clientX, e.clientY]);
+      if (fingers.size === 2){
+        const [a, b] = [...fingers.values()];
+        fingers.d0 ??= Math.hypot(was[0][0] - was[1][0], was[0][1] - was[1][1]);
+        if (Math.hypot(a[0] - b[0], a[1] - b[1]) < fingers.d0 * .7){ fingers.clear(); fingers.d0 = null; drag = null; return toWorld(); }
+        return;
+      }
+    }
+    if (!drag) return;
+    const dx = (e.clientX - drag.x) / drag.z, dy = (e.clientY - drag.y) / drag.z;
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    if (!moved){ moved = true; $('#mpWrap').classList.add('dragging'); $('#mpWrap').setPointerCapture(e.pointerId); }
+    setPan(drag.px + dx, drag.py + dy, false);
+  });
+  const end = e => { fingers.delete(e.pointerId); if (fingers.size < 2) fingers.d0 = null; drag = null; $('#mpWrap')?.classList.remove('dragging'); };
+  v.addEventListener('pointerup', end);
+  v.addEventListener('pointercancel', end);
+  // A drag shouldn't count as tapping whatever it started on
+  v.addEventListener('click', e => { if (moved){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+
+  v.addEventListener('click', e => {
+    const t = e.target.closest('button');
+    if (t?.dataset.mcity){
+      const to = t.dataset.mcity;
+      if (to === S.mapCity) return;
+      if (to === 'World') return toWorld();
+      if (S.mapCity === 'World') return enterCity(to);
+      S.mapCity = to; S.mapSel = null; S.mapAll = false; S.mapPan = null;
+      renderMap({drop: true});
+      return syncPanel();
+    }
+    if (t?.hasAttribute('data-towrld')) return toWorld();
+    if (S.mapCity === 'World') return;
+    if (!t){ if (e.target.closest('#mpCanvas') && S.mapSel) selectPin(null); return; }
+    if (t.dataset.mpin != null) return selectPin(S.mapSel === t.dataset.mpin ? null : t.dataset.mpin);
+    if (t.hasAttribute('data-marea')) return selectPin(S.mapSel === '@area' ? null : '@area');
+    if (t.hasAttribute('data-mclose')) return selectPin(null);
+    if (t.hasAttribute('data-mall')){ S.mapAll = !S.mapAll; return renderMapSheet(true); }
+    if (t.hasAttribute('data-mheat')){
+      S.mapHeat = !S.mapHeat;
+      t.setAttribute('aria-pressed', S.mapHeat);
+      $('.mp-heat').classList.toggle('on', S.mapHeat);
+      $('#mpWrap').classList.toggle('heat', S.mapHeat);
+      if (S.mapHeat){
+        // Pull back to the busiest place
+        const top = [...S.mapData.places].sort((a, b) => b.ms.length - a.ms.length)[0];
+        if (top && !S.mapSel) centreMap(top.x, top.y);
+        toast(top ? `You eat most at ${top.home ? 'home' : top.name}` : 'No meals here yet', `pal:burger:love`);
+      }
+      return;
+    }
+  });
+})();
+
+// Open the map on a given place (from Meal detail's place chip)
+function showOnMap(place, home){
+  const meal = S.library.find(x => (home ? x.home : x.place === place));
+  S.mapCity = meal ? cityOf(meal) : 'London';
+  S.mapSel = home ? 'Home' : place; S.mapAll = false; S.mapPan = null;
+  S.mapFocus = true;
+  setTab('map');
+}
+
+/* ---------- Map: world overview ---------- */
+// Equirectangular world, 4 map units per degree. Shapes are deliberately loose: it's a doodle, not an atlas.
+const WW = 1440, WH = 572, LAT_TOP = 85;
+const proj = ([lon, lat]) => [(lon + 180) * 4, (LAT_TOP - lat) * 4];
+const CITY_GEO = {London: [-0.13, 51.5], Porto: [-8.61, 41.15], Naxos: [25.38, 37.1]};
+const LANDS = [
+  [[-168,66],[-156,71],[-140,70],[-125,70],[-95,72],[-80,73],[-62,66],[-55,52],[-66,45],[-70,42],[-76,35],[-81,31],[-80,25],[-82,27],[-85,30],[-90,29],[-97,26],[-97,21],[-92,18],[-87,21],[-83,15],[-78,8],[-80,7],[-86,12],[-92,15],[-105,20],[-112,30],[-118,34],[-124,40],[-124,48],[-133,56],[-148,60],[-160,58],[-165,62]],
+  [[-55,82],[-30,83],[-20,75],[-22,70],[-42,60],[-50,64],[-56,74]],
+  [[-78,8],[-72,12],[-62,10],[-50,0],[-35,-6],[-39,-14],[-41,-22],[-48,-26],[-53,-34],[-58,-38],[-65,-42],[-68,-50],[-70,-55],[-74,-50],[-73,-40],[-71,-30],[-70,-18],[-76,-14],[-81,-5],[-80,1]],
+  [[-10,36],[-9,43],[-2,44],[-5,48],[2,51],[8,54],[10,57],[5,62],[12,66],[20,70],[30,70],[40,67],[60,69],[70,73],[90,76],[110,77],[140,72],[160,70],[180,68],[180,62],[163,58],[156,51],[142,46],[140,40],[130,35],[122,31],[121,25],[110,20],[106,10],[100,13],[100,3],[104,1],[98,9],[94,16],[90,22],[80,15],[78,8],[72,20],[66,25],[57,25],[56,27],[50,30],[48,29],[52,24],[56,24],[59,22],[52,16],[43,13],[39,21],[35,28],[34,31],[36,36],[30,36],[27,37],[26,40],[23,40],[21,37],[19,41],[15,40],[16,38],[12,42],[9,44],[7,44],[3,43],[-1,37],[-6,36]],
+  [[-5,50],[1,51],[2,53],[-1,55],[-2,57],[-5,58],[-6,56],[-5,54],[-3,53],[-5,52]],
+  [[-10,52],[-6,52],[-6,55],[-10,54]],
+  [[-24,65],[-14,66],[-14,64],[-22,63]],
+  [[-17,21],[-16,28],[-10,30],[-6,36],[10,37],[11,33],[20,31],[32,31],[35,28],[39,21],[43,12],[51,12],[48,4],[40,-4],[40,-15],[35,-24],[32,-28],[26,-34],[19,-35],[17,-29],[12,-17],[13,-6],[9,-1],[9,4],[4,6],[-4,5],[-8,4],[-13,8],[-17,14]],
+  [[44,-25],[47,-25],[50,-15],[49,-12],[44,-17]],
+  [[114,-22],[114,-34],[118,-35],[124,-33],[131,-31],[137,-34],[140,-38],[146,-39],[150,-37],[153,-28],[153,-25],[146,-19],[142,-11],[136,-12],[130,-12],[126,-14],[122,-18]],
+  [[130,31],[132,34],[135,34],[140,35],[141,38],[142,43],[145,44],[141,45],[139,40],[136,36],[132,35]],
+  [[109,1],[117,7],[119,1],[116,-4],[110,-3]],
+  [[95,5],[106,-6],[104,-5],[98,1]],
+  [[172,-35],[178,-38],[174,-41],[167,-46],[171,-44],[174,-39]],
+  [[24,35],[26,35.3],[26,35.1],[24,35.2]],
+];
+// Smooth, slightly wobbly outline through the points
+function blobPath(pts){
+  const p = pts.map(proj), n = p.length;
+  let d = `M${((p[0][0] + p[n - 1][0]) / 2).toFixed(1)} ${((p[0][1] + p[n - 1][1]) / 2).toFixed(1)}`;
+  for (let i = 0; i < n; i++){
+    const a = p[i], b = p[(i + 1) % n];
+    d += ` Q${a[0].toFixed(1)} ${a[1].toFixed(1)} ${((a[0] + b[0]) / 2).toFixed(1)} ${((a[1] + b[1]) / 2).toFixed(1)}`;
+  }
+  return d + 'Z';
+}
+const WORLD_SVG = `<rect x="-2000" y="-2000" width="${WW + 4000}" height="${WH + 4000}" fill="#9CC8FF"/>
+  <g stroke="#FFFFFF" stroke-opacity=".45" stroke-width="1" vector-effect="non-scaling-stroke" stroke-dasharray="4 6">${
+    [-60,-30,0,30,60].map(l => `<path d="M0 ${proj([0, l])[1]} H${WW}" vector-effect="non-scaling-stroke"/>`).join('')}${
+    [-120,-60,0,60,120].map(l => `<path d="M${proj([l, 0])[0]} 0 V${WH}" vector-effect="non-scaling-stroke"/>`).join('')}</g>
+  <g fill="#F6EFD9" stroke="#1F2A44" stroke-width="2.5" stroke-linejoin="round">${LANDS.map(l => `<path d="${blobPath(l)}" vector-effect="non-scaling-stroke"/>`).join('')}</g>`;
+const WORLD_LABELS = [['Atlantic', -38, 30, 'water'], ['Pacific', -150, 10, 'water'], ['Indian Ocean', 78, -20, 'water'],
+  ['EUROPE', 24, 52], ['AFRICA', 20, 6], ['ASIA', 95, 50], ['N. AMERICA', -102, 46], ['S. AMERICA', -60, -14], ['AUSTRALIA', 134, -25]];
+
+const W_MIN = () => $('#mpWrap').clientWidth / WW;
+const W_MAX = 34;
+const W_ENTER = 16;   // zoomed in this far over a city, the detailed city map takes over
+function worldSize(){ const w = $('#mpWrap'); return [w.clientWidth, w.clientHeight]; }
+function clampWorld(v){
+  const [vw, vh] = worldSize();
+  const s = Math.min(W_MAX, Math.max(W_MIN(), v.s));
+  const hx = vw / 2 / s, hy = vh / 2 / s;
+  const cx = WW * s <= vw ? WW / 2 : Math.min(WW - hx, Math.max(hx, v.cx));
+  const cy = WH * s <= vh ? WH / 2 : Math.min(WH - hy, Math.max(hy, v.cy));
+  return {cx, cy, s};
+}
+// Start framed on the cities you've eaten in, with plenty of world around them
+function defaultWorld(){
+  const pts = mapCities().map(c => proj(CITY_GEO[c.city]));
+  const cx = pts.reduce((n, p) => n + p[0], 0) / pts.length, cy = pts.reduce((n, p) => n + p[1], 0) / pts.length;
+  return clampWorld({cx, cy: cy + 40, s: 0.55});
+}
+const toScreen = ([x, y], v = S.world) => { const [vw, vh] = worldSize(); return [(x - v.cx) * v.s + vw / 2, (y - v.cy) * v.s + vh / 2]; };
+
+// Cities close together on screen merge into one marker
+function worldClusters(){
+  const cities = mapCities().filter(c => c.n > 0).map(c => {
+    const ms = S.library.filter(x => cityOf(x) === c.city).sort((a, b) => b.m - a.m || b.d - a.d);
+    return {...c, ms, pt: proj(CITY_GEO[c.city])};
+  });
+  const out = [];
+  for (const c of cities){
+    const [x, y] = toScreen(c.pt);
+    const hit = out.find(g => Math.hypot(g.x - x, g.y - y) < 60);
+    if (hit){ hit.members.push(c); hit.x = (hit.x + x) / 2; hit.y = (hit.y + y) / 2; }
+    else out.push({x, y, members: [c]});
+  }
+  return out;
+}
+
+function renderWorld(){
+  const v = S.world, [vw, vh] = worldSize();
+  $('#wSvg').setAttribute('viewBox', `${v.cx - vw / 2 / v.s} ${v.cy - vh / 2 / v.s} ${vw / v.s} ${vh / v.s}`);
+  $('#wLabels').innerHTML = WORLD_LABELS.map(([t, lon, lat, k]) => {
+    const [x, y] = toScreen(proj([lon, lat]));
+    return x < -60 || x > vw + 60 || y < -20 || y > vh + 20 ? '' : `<span class="mp-label${k ? ' ' + k : ''}" style="left:${x}px;top:${y}px">${t}</span>`;
+  }).join('');
+  const clusters = worldClusters();
+  const key = clusters.map(g => g.members.map(c => c.city).join('+')).join('|');
+  const box = $('#wMarks');
+  if (box.dataset.key !== key){
+    box.dataset.key = key;
+    box.innerHTML = clusters.map((g, k) => {
+      const n = g.members.reduce((t, c) => t + c.n, 0), top = g.members[0];
+      const label = g.members.length > 1 ? `${top.city} +${g.members.length - 1}` : top.city;
+      const stack = g.members.slice(0, 3).map((c, i) => `<span class="disc sk" style="--o:${i}"><img src="${img(c.ms[0].img)}" alt=""></span>`).join('');
+      return `<button class="w-mark${g.members.length > 1 ? ' group' : ''}" style="--k:${k}" data-wmark="${g.members.map(c => c.city).join(',')}"
+        aria-label="${g.members.map(c => c.city).join(', ')}: ${plural(n, 'meal')}. ${g.members.length > 1 ? 'Zoom in to separate' : 'Open the map'}">
+        <span class="stack">${stack}</span>${MI2.tip}<span class="cnt">${n}</span><span class="name">${esc(label)}</span></button>`;
+    }).join('');
+  }
+  $$('.w-mark', box).forEach((el, i) => { el.style.left = clusters[i].x + 'px'; el.style.top = clusters[i].y + 'px'; });
+  const zIn = $('[data-wzoom="in"]'), zOut = $('[data-wzoom="out"]');
+  if (zIn) zIn.disabled = v.s >= W_MAX - .01;
+  if (zOut) zOut.disabled = v.s <= W_MIN() + .001;
+}
+
+let worldAnim = 0, worldGuard = 0;
+function animateWorld(target, dur = 520, done){
+  cancelAnimationFrame(worldAnim);
+  const from = {...S.world}, to = clampWorld(target);
+  if (REDUCED){ S.world = to; renderWorld(); return done?.(); }
+  const t0 = performance.now();
+  let finished = false;
+  const finish = () => { if (finished) return; finished = true; cancelAnimationFrame(worldAnim); clearTimeout(guard); S.world = to; renderWorld(); done?.(); };
+  // Safety net: if frames stall (background tab, busy page), land on the end state anyway
+  clearTimeout(worldGuard);
+  const guard = worldGuard = setTimeout(finish, dur + 250);
+  const step = now => {
+    if (finished) return;
+    const t = Math.min(1, (now - t0) / dur), e = t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // Zoom in log space so it feels even; pan follows so the target stays steady
+    const s = Math.exp(Math.log(from.s) + (Math.log(to.s) - Math.log(from.s)) * e);
+    S.world = {cx: from.cx + (to.cx - from.cx) * e, cy: from.cy + (to.cy - from.cy) * e, s};
+    renderWorld();
+    if (t < 1) worldAnim = requestAnimationFrame(step); else finish();
+  };
+  worldAnim = requestAnimationFrame(step);
+}
+// Zoom by a factor around a point on screen
+function zoomWorldAt(f, sx, sy, animate = false){
+  const [vw, vh] = worldSize(), v = S.world;
+  const s = Math.min(W_MAX, Math.max(W_MIN(), v.s * f));
+  const mx = v.cx + (sx - vw / 2) / v.s, my = v.cy + (sy - vh / 2) / v.s;
+  const target = {s, cx: mx - (sx - vw / 2) / s, cy: my - (sy - vh / 2) / s};
+  if (animate) animateWorld(target, 380, checkEnter);
+  else { S.world = clampWorld(target); renderWorld(); }
+}
+// Zoomed right in over a city? Open its detailed map.
+function checkEnter(){
+  if (S.mapCity !== 'World' || S.world.s < W_ENTER) return;
+  const [vw, vh] = worldSize();
+  const near = mapCities().filter(c => c.n).map(c => ({c, d: Math.hypot(...toScreen(proj(CITY_GEO[c.city])).map((q, i) => q - [vw, vh][i] / 2))}))
+    .sort((a, b) => a.d - b.d)[0];
+  if (near && near.d < Math.min(vw, vh) * .4) enterCity(near.c.city);
+}
+
+function enterCity(city){
+  const [x, y] = proj(CITY_GEO[city]);
+  animateWorld({cx: x, cy: y, s: W_MAX}, 560, () => {
+    S.mapCity = city; S.mapSel = null; S.mapAll = false; S.mapPan = null;
+    renderMap({drop: true, from: 'world'});
+    syncPanel();
+  });
+}
+function toWorld(){
+  const city = S.mapCity, geo = CITY_GEO[city];
+  S.mapCity = 'World'; S.mapSel = null;
+  S.world = clampWorld(geo ? {cx: proj(geo)[0], cy: proj(geo)[1], s: W_ENTER + 4} : defaultWorld());
+  renderMap({from: 'city'});
+  requestAnimationFrame(() => animateWorld(defaultWorld(), 700));
+  syncPanel();
+}
+
+/* World gestures: drag to pan, pinch / wheel / double-tap / buttons to zoom */
+(() => {
+  const v = $('#v-map'), pts = new Map();
+  let start = null, moved = false, pinch = null, lastTap = 0;
+  const local = e => { const r = $('#mpWrap').getBoundingClientRect(), z = zoomOf(); return [(e.clientX - r.left) / z, (e.clientY - r.top) / z]; };
+  const world = () => S.mapCity === 'World';
+  v.addEventListener('pointerdown', e => {
+    if (!world() || !e.target.closest('#mpWrap') || e.target.closest('#mpSheet, .w-zoom')) return;
+    cancelAnimationFrame(worldAnim); clearTimeout(worldGuard);
+    pts.set(e.pointerId, local(e));
+    if (pts.size === 1){ start = {p: local(e), v: {...S.world}}; moved = false; }
+    if (pts.size === 2){
+      const [a, b] = [...pts.values()];
+      pinch = {d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: S.world.s, mid: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], v: {...S.world}};
+    }
+  });
+  v.addEventListener('pointermove', e => {
+    if (!world() || !pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, local(e));
+    if (pinch && pts.size >= 2){
+      const [a, b] = [...pts.values()];
+      const f = Math.hypot(a[0] - b[0], a[1] - b[1]) / pinch.d;
+      S.world = {...pinch.v};
+      zoomWorldAt(f, pinch.mid[0], pinch.mid[1]);
+      moved = true;
+      return;
+    }
+    if (!start) return;
+    const [x, y] = local(e), dx = x - start.p[0], dy = y - start.p[1];
+    if (!moved && Math.hypot(dx, dy) < 6) return;
+    if (!moved){ moved = true; $('#mpWrap').classList.add('dragging'); $('#mpWrap').setPointerCapture(e.pointerId); }
+    S.world = clampWorld({cx: start.v.cx - dx / S.world.s, cy: start.v.cy - dy / S.world.s, s: S.world.s});
+    renderWorld();
+  });
+  const end = e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (pts.size < 2 && pinch){ pinch = null; checkEnter(); }
+    if (!pts.size){ start = null; $('#mpWrap')?.classList.remove('dragging'); }
+  };
+  v.addEventListener('pointerup', end);
+  v.addEventListener('pointercancel', end);
+  v.addEventListener('click', e => { if (world() && moved){ e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+
+  // Trackpad pinch arrives as ctrl+wheel; a plain scroll wheel zooms too
+  let wheelT;
+  v.addEventListener('wheel', e => {
+    if (!e.target.closest('#mpWrap') || e.target.closest('#mpSheet')) return;
+    e.preventDefault();
+    if (!world()){
+      // Scrolling out of a city map goes back to the world
+      S.cityWheel = (S.cityWheel || 0) + e.deltaY;
+      clearTimeout(wheelT); wheelT = setTimeout(() => S.cityWheel = 0, 300);
+      if (S.cityWheel > 160){ S.cityWheel = 0; toWorld(); }
+      return;
+    }
+    cancelAnimationFrame(worldAnim); clearTimeout(worldGuard);
+    const [x, y] = local(e);
+    zoomWorldAt(Math.exp(-e.deltaY * (e.ctrlKey ? .01 : .0018)), x, y);
+    clearTimeout(wheelT); wheelT = setTimeout(checkEnter, 220);
+  }, {passive: false});
+
+  v.addEventListener('click', e => {
+    if (!world()) return;
+    const t = e.target.closest('button');
+    if (t?.dataset.wzoom){
+      // Zoom towards the marker nearest the middle, so your places stay in view
+      const [vw, vh] = worldSize(), mid = [vw / 2, (vh - 150) / 2];
+      const near = mapCities().filter(c => c.n).map(c => toScreen(proj(CITY_GEO[c.city])))
+        .filter(([x, y]) => x > 0 && x < vw && y > 0 && y < vh - 150)
+        .sort((a, b) => Math.hypot(a[0] - mid[0], a[1] - mid[1]) - Math.hypot(b[0] - mid[0], b[1] - mid[1]))[0];
+      const [ax, ay] = t.dataset.wzoom === 'in' && near ? near : [vw / 2, vh / 2];
+      return zoomWorldAt(t.dataset.wzoom === 'in' ? 2.2 : 1 / 2.2, ax, ay, true);
+    }
+    if (t?.dataset.wmark){
+      const cities = t.dataset.wmark.split(',');
+      if (cities.length === 1) return enterCity(cities[0]);
+      // Zoom until the group separates
+      const ps = cities.map(c => proj(CITY_GEO[c])), [vw, vh] = worldSize();
+      const xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
+      const s = Math.min((vw - 140) / Math.max(20, Math.max(...xs) - Math.min(...xs)), (vh - 260) / Math.max(20, Math.max(...ys) - Math.min(...ys)));
+      return animateWorld({cx: (Math.max(...xs) + Math.min(...xs)) / 2, cy: (Math.max(...ys) + Math.min(...ys)) / 2 + 30 / s, s: Math.max(s, S.world.s * 1.6)}, 600);
+    }
+    if (!t && e.target.closest('#mpWrap') && !e.target.closest('#mpSheet')){
+      const now = performance.now();
+      if (now - lastTap < 320){ const [x, y] = local(e); zoomWorldAt(2.2, x, y, true); lastTap = 0; } else lastTap = now;
+    }
+  });
+})();
+
+/* ---------- Rediscover ---------- */
+const RI = {
+  star: '<svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><path d="M12 3.2l2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.8z"/></svg>',
+  grid: '<svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/></svg>',
+  shuffle: '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 3-2 3"/></svg>',
+  wander: '<svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c3-1 3-6 6-7s4 3 7 1 2-6 3-8"/><path d="M17 5h3v3"/></svg>',
+  clock: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+  fork: '<svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 3v7a2 2 0 0 0 4 0V3M9 12v9M17 3c-2 2-2.5 5-2 8h2v10"/></svg>',
+  phone: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2.5"/><path d="M3 9v6M21 9v6"/></svg>',
+  pin: '<svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v8"/></svg>',
+  share: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>',
+  save: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>',
+  search: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+  sync: '<svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2BB3A3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14-4.5L4 9M4 4v5h5M4 13a8 8 0 0 0 14 4.5L20 15M20 20v-5h-5"/></svg>',
+  play: '<svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="#2F5FD0"><path d="M7 4l13 8-13 8z"/></svg>',
+  x: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  arrow: '<svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
+};
+// Dish families, for "Every Sunday roast" and dish collections
+const DISH_GROUPS = {
+  'Prawns': ['3d69d86c', '62ba8c99', 'b3d7422b', 'f416838a', 'f4cab933'],
+  'Pasta': ['9da607c0', '3d69d86c', '62ba8c99', 'f4cab933', 'f416838a'],
+  'Sunday roast': ['9eae9172'],
+  'Seafood': ['2851fd0a', '83a54365', '5d54bdda', '368fcd3a', '69115368', 'bbad9e51', '8c8e10fe', 'a8418205'],
+};
+const groupOf = x => Object.keys(DISH_GROUPS).find(g => DISH_GROUPS[g].includes(String(x.img).slice(0, 8)));
+const CITY_COUNTRY = {London: 'United Kingdom', Porto: 'Portugal', Naxos: 'Greece'};
+const KIND_COLOR = {Dish: '#FFD3E2', Place: '#BFDBFF', Trip: '#9FDDC4', Cuisine: '#E9E0FF', City: '#FFE07A', Yours: '#FFD3E2'};
+const SWATCHES = ['#FFB8D2', '#BFEBD8', '#FFE07A', '#BFDBFF', '#D9CCFF', '#FFC9A8'];
+const byNewest = (a, b) => b.m - a.m || b.d - a.d || b.mins - a.mins;
+const bestOf = ms => [...ms].sort((a, b) => b.rating - a.rating || byNewest(a, b))[0];
+const theName = x => 'the ' + x.name.toLowerCase().replace(/^the /, '');
+function spanLabel(ms){
+  const ks = ms.map(x => x.m).sort((a, b) => a - b);
+  return ks[0] === ks[ks.length - 1] ? `${MON[ks[0]]} ${YEAR}` : `${MON[ks[0]]}–${MON[ks[ks.length - 1]]}`;
+}
+
+/* Collections: auto ones are worked out from your meals every time, so they keep themselves up to date */
+function autoCollections(){
+  const lib = S.library, out = [];
+  const add = (id, kind, title, ms, sub) => { if (ms.length >= 2) out.push({id, kind, title, ms: [...ms].sort(byNewest), sub, auto: true}); };
+  // Trips: every city that isn't home
+  for (const city of ['Naxos', 'Porto']){
+    const ms = lib.filter(x => cityOf(x) === city);
+    const days = new Set(ms.map(x => `${x.m}-${x.d}`)).size;
+    if (ms.length) add(`trip:${city}`, 'Trip', `${city}, ${spanLabel(ms)}`, ms, `${plural(ms.length, 'meal')} · ${plural(days, 'day')} · best rated: ${theName(bestOf(ms))}`);
+  }
+  for (const [g, title, word] of [['Prawns', 'Prawns, every time', 'meal'], ['Sunday roast', 'Sunday roasts', 'roast'], ['Pasta', 'Pasta, every way', 'plate']]){
+    const ms = lib.filter(x => DISH_GROUPS[g].includes(String(x.img).slice(0, 8)));
+    if (ms.length) add(`dish:${g}`, 'Dish', title, ms, `${plural(ms.length, word)} · ${spanLabel(ms)} · best rated: ${theName(bestOf(ms))}`);
+  }
+  const sweets = lib.filter(x => x.slot === 'Sweet');
+  if (sweets.length) add('dish:sweet', 'Dish', 'Sweet things', sweets, `${plural(sweets.length, 'dessert')} · ${spanLabel(sweets)} · best rated: ${theName(bestOf(sweets))}`);
+  const places = {};
+  lib.filter(x => !x.home && x.place !== 'Out').forEach(x => (places[x.place] ||= []).push(x));
+  Object.entries(places).filter(([, ms]) => ms.length >= 3).sort((a, b) => b[1].length - a[1].length).slice(0, 5)
+    .forEach(([p, ms]) => add(`place:${p}`, 'Place', p, ms, `${plural(new Set(ms.map(x => `${x.m}-${x.d}`)).size, 'visit')} · ${spanLabel(ms)} · best rated: ${theName(bestOf(ms))}`));
+  const home = lib.filter(x => x.home);
+  if (home.length){
+    const top = {}; home.forEach(x => top[x.name] = (top[x.name] || 0) + 1);
+    add('place:Home', 'Place', 'Home cooking', home, `${plural(home.length, 'meal')} · ${spanLabel(home)} · most made: ${Object.keys(top).sort((a, b) => top[b] - top[a])[0].toLowerCase()}`);
+  }
+  for (const [c, title] of [['Greek', 'Greek'], ['Tapas', 'Tapas & small plates'], ['Japanese', 'Japanese']]){
+    const ms = lib.filter(x => x.cuisine === c);
+    if (ms.length) add(`cuisine:${c}`, 'Cuisine', title, ms, `${plural(ms.length, c === 'Tapas' ? 'plate' : 'meal')} · ${spanLabel(ms)} · best rated: ${theName(bestOf(ms))}`);
+  }
+  return out;
+}
+// Your own collections hold meal ids; meals you delete simply drop out
+function userCollections(){
+  if (!S.collsSeeded){
+    S.collsSeeded = true;
+    const pickIds = prefixes => prefixes.map(p => S.library.filter(x => String(x.img).startsWith(p)).sort(byNewest)[0]?.id).filter(Boolean);
+    S.userColls = S.library.length ? [{id: 'u1', title: 'Things I want to cook again', color: SWATCHES[0], ids: pickIds(['9da607c0', '5147c302', 'f6cdcc95', '3d69d86c']), cover: null}] : [];
+    S.pinned = new Set(S.library.length ? ['u1', 'dish:Sunday roast', 'trip:Naxos'] : []);
+  }
+  return S.userColls.map(c => {
+    const ms = c.ids.map(id => S.library.find(x => x.id === id)).filter(Boolean);
+    return {id: c.id, kind: 'Yours', title: c.title, ms, color: c.color, coverId: c.cover, user: true,
+      sub: `${plural(ms.length, 'meal')} · added by hand${ms.length ? ` · cover: ${theName(ms.find(x => x.id === c.cover) || ms[0])}` : ''}`};
+  });
+}
+const allCollections = () => [...userCollections(), ...autoCollections()];
+const findColl = id => allCollections().find(c => c.id === id);
+const coverOf = c => c.ms.find(x => x.id === c.coverId) || (c.auto ? bestOf(c.ms) : c.ms[0]);
+
+function collCard(c){
+  if (!c.ms.length) return '';
+  const cover = coverOf(c), rest = c.ms.filter(x => x !== cover).slice(0, 2);
+  const imgs = [cover, ...rest];
+  return `<button class="ccard sk" data-coll="${esc(c.id)}" aria-label="${esc(c.title)}, ${esc(c.sub)}">
+    <span class="mosaic${imgs.length < 3 ? ' one' : ''}">${(imgs.length < 3 ? [cover] : imgs).map(x => `<img src="${img(x.img)}" alt="" loading="lazy">`).join('')}</span>
+    ${S.pinned.has(c.id) ? `<span class="pinmark" aria-hidden="true">${RI.pin}</span>` : ''}
+    <span class="kind" style="--c:${c.color || KIND_COLOR[c.kind]}">${c.user ? 'Yours' : c.kind}</span>
+    <b>${esc(c.title)}</b><small>${esc(c.sub)}</small></button>`;
+}
+function collRow(c){
+  const cover = coverOf(c), imgs = c.ms.length >= 3 ? [cover, ...c.ms.filter(x => x !== cover).slice(0, 2)] : [cover, cover, cover];
+  return `<div style="position:relative"><button class="crow sk" data-coll="${esc(c.id)}">
+      <span class="mosaic">${cover ? imgs.map(x => `<img src="${img(x.img)}" alt="" loading="lazy">`).join('') : ''}</span>
+      <span class="info"><span class="kind" style="--c:${c.color || KIND_COLOR[c.kind]}">${c.user ? 'Yours' : `${c.kind} · auto`}</span><b>${esc(c.title)}</b><small>${esc(c.sub)}</small></span>
+      <span style="width:38px"></span>
+    </button><button class="pinbtn" data-pin="${esc(c.id)}" aria-pressed="${S.pinned.has(c.id)}" aria-label="${S.pinned.has(c.id) ? 'Unpin' : 'Pin'} ${esc(c.title)}" style="position:absolute;right:12px;top:12px">${RI.pin}</button></div>`;
+}
+
+/* Today's surprise: an old meal, with a reason it's worth seeing again */
+function surprisePool(){
+  const lib = S.library.filter(x => !String(x.img).startsWith('data:'));
+  const out = [];
+  for (const x of lib){
+    const monthsAgo = TODAY.m - x.m;
+    if (x.d === TODAY.d && monthsAgo > 0) out.push({x, why: `On this day · ${monthsAgo === 1 ? 'a month' : `${monthsAgo} months`} ago`});
+    else if (monthsAgo >= 5) out.push({x, why: `Forgotten · not opened since ${MONTHS[x.m]}`});
+    else if (x.rating === 5 && monthsAgo >= 2) out.push({x, why: '5 stars · you loved this'});
+  }
+  const counts = {};
+  lib.forEach(x => counts[x.name] = (counts[x.name] || 0) + 1);
+  lib.filter(x => counts[x.name] === 1).forEach(x => out.push({x, why: 'A one-off · you only had it once'}));
+  return out;
+}
+function nextSurprise(){
+  const pool = surprisePool();
+  if (!pool.length) return null;
+  S.seenSurprise ||= new Set();
+  // Not one you've just seen, and not the same dish as the card already showing
+  const showing = S.surprise?.x.name;
+  let fresh = pool.filter(p => !S.seenSurprise.has(p.x.id) && p.x.name !== showing);
+  if (!fresh.length){ S.seenSurprise.clear(); fresh = pool; }
+  // Same surprise all day, until you shuffle: start from a fixed pick
+  const p = S.surprise ? fresh[Math.floor(Math.random() * fresh.length)] : fresh.find(q => q.x.name.startsWith('Roast')) || fresh[0];
+  S.seenSurprise.add(p.x.id);
+  return p;
+}
+function surpriseCard(p){
+  const x = p.x, g = groupOf(x);
+  const palKey = palFor(x.cuisine);
+  return `<div class="surprise-wrap">
+    <span class="peek">${pal(palKey, 'love', 72, {say: 'Remember this?'})}</span>
+    <div class="scard sk in" id="scard">
+      <button class="ph" data-meal="${x.id}" aria-label="Open ${esc(x.name)}"><img src="${img(x.img)}" alt=""><span class="date">${WD[dateOf(x.m, x.d).getDay()]} ${x.d} ${MON[x.m]} ${YEAR}</span></button>
+      <h3>${esc(x.name)}</h3>
+      <div class="chips">
+        ${x.home ? `<span class="schip sk" style="--sk-bg:var(--nav)">🏠 Made at home</span>` : `<button class="schip sk" style="--sk-bg:#BFDBFF" data-rplace="${esc(x.place)}">${I.pin}${esc(placeLabel(x.place))}</button>`}
+        ${g ? `<button class="schip sk" style="--sk-bg:#FFD3E2" data-coll="dish:${esc(g)}">${RI.fork}Every ${esc(g === 'Sunday roast' ? g : g.toLowerCase())}</button>` : x.cuisine ? `<button class="schip sk" style="--sk-bg:#E9E0FF" data-coll="cuisine:${esc(x.cuisine)}">${RI.fork}All ${esc(x.cuisine)}</button>` : ''}
+      </div>
+    </div></div>`;
+}
+
+function renderRediscover(enter = false){
+  const seg = S.rdSeg || 'surprise';
+  const head = `<header class="page-head sk">
+      <div class="row-between"><div><h1>Rediscover</h1><span class="sub">A little surprise from your past plates</span></div>
+        <button class="sq-btn sk" data-act="open-settings" aria-label="Settings">${I.gear}</button></div>
+      <div class="seg sk" style="--n:2;--i:${seg === 'surprise' ? 0 : 1}" role="group" aria-label="Rediscover">
+        <span class="seg-ind" aria-hidden="true"></span>
+        <button data-rseg="surprise" aria-pressed="${seg === 'surprise'}">${RI.star}Surprise</button>
+        <button data-rseg="collections" aria-pressed="${seg === 'collections'}">${RI.grid}Collections</button>
+      </div>
+    </header>`;
+  $('#v-rediscover').innerHTML = head + `<div class="page-body${enter ? ' fade-swap' : ''}" id="rdBody">${seg === 'surprise' ? surpriseBody() : collectionsBody()}</div>`;
+}
+function surpriseBody(){
+  if (!S.library.length) return `<div class="cempty sk">${pal('bao', 'meh', 90)}<b>Nothing to rediscover yet</b><span>Once you've a few meals, old favourites will pop up here.</span></div>`;
+  S.surprise ||= nextSurprise();
+  const all = allCollections().filter(c => c.ms.length), pinned = all.filter(c => S.pinned.has(c.id));
+  return `<div class="row-between"><h2 class="sec-title" style="margin:0"><span style="font-family:var(--head);font-size:22px;font-weight:800;line-height:1.05">Today's<br>surprise</span></h2>
+      <span class="why sk">${RI.clock}${esc(S.surprise.why)}</span></div>
+    <div id="surpriseSlot">${surpriseCard(S.surprise)}</div>
+    <div class="rd-btns"><button class="btn primary sk" data-act="shuffle">${RI.shuffle}Shuffle</button><button class="btn yellow sk" data-act="wander">${RI.wander}Wander</button></div>
+    <p class="shake">${RI.phone}or shake your phone</p>
+    <div class="rd-divider"></div>
+    <div class="sec-title"><h2>Your collections</h2><span style="display:flex;gap:10px;align-items:center"><button class="lnk" data-rseg="collections">See all ›</button><button class="pill-btn sm blue sk" data-act="new-coll">${I.plus}New</button></span></div>
+    <p class="mini-label" style="margin-top:2px;letter-spacing:0;font-size:13px">Made for you, no setup · or make your own</p>
+    ${pinned.length ? `<p class="mini-label">PINNED</p><div class="row-scroll">${pinned.map(collCard).join('')}</div>` : ''}
+    <p class="mini-label">ALL COLLECTIONS</p>
+    <div class="row-scroll">
+      <button class="ccard add sk" data-act="new-coll"><span class="plusb">+</span><b>New collection</b><small>Pick meals by hand, name it, choose a cover.</small><em>“Things I want to cook again”</em></button>
+      ${all.filter(c => !S.pinned.has(c.id)).map(collCard).join('')}
+    </div>
+    <button class="link" data-rseg="collections" style="align-self:center">Open all collections ›</button>
+    <p class="shake" style="margin-top:-10px">Collections update themselves as new meals arrive.</p>`;
+}
+const FILTERS = [['all', 'All'], ['mine', 'Mine'], ['Place', 'Places'], ['Dish', 'Dishes'], ['Trip', 'Trips'], ['Cuisine', 'Cuisines']];
+function collectionsBody(){
+  const f = S.collFilter || 'all', q = (S.collQuery || '').trim().toLowerCase();
+  const all = allCollections().filter(c => c.ms.length || c.user);
+  const match = c => (f === 'all' || (f === 'mine' ? c.user : c.kind === f)) &&
+    (!q || c.title.toLowerCase().includes(q) || c.ms.some(x => x.name.toLowerCase().includes(q) || x.place.toLowerCase().includes(q)));
+  const list = all.filter(match), pinned = list.filter(c => S.pinned.has(c.id)), mine = list.filter(c => c.user), auto = list.filter(c => c.auto);
+  return `<div class="row-between"><span style="font-size:14px;font-weight:800;color:var(--ink-2)">${plural(all.length, 'collection')} · ${userCollections().length} made by you</span><button class="pill-btn sm blue sk" data-act="new-coll">${I.plus}New collection</button></div>
+    <label class="csearch sk">${RI.search}<input id="collSearch" type="search" placeholder="Search collections, dishes, places" value="${esc(S.collQuery || '')}" autocomplete="off"></label>
+    <div class="cfilters" role="group" aria-label="Filter collections">${FILTERS.map(([k, l]) => `<button class="sk" data-cfilter="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div>
+    <div id="collList" style="display:flex;flex-direction:column;gap:12px">
+    ${!list.length ? `<div class="cempty sk">${pal('donut', 'meh', 70)}<b>No collections match</b><span>Try another word, or make your own.</span></div>` : ''}
+    ${pinned.length ? `<div class="sec-title"><h2>Pinned</h2><span class="lnk" style="color:var(--ink-3)">Always at the top</span></div><div class="row-scroll">${pinned.map(collCard).join('')}</div>` : ''}
+    ${mine.length ? `<div class="sec-title"><h2>Made by you</h2></div>${mine.map(collRow).join('')}` : ''}
+    ${f === 'all' || f === 'mine' ? `<button class="ccard add sk" data-act="new-coll" style="width:100%;min-height:0;flex-direction:row;padding:14px"><span class="plusb" style="width:38px;height:38px;font-size:22px">+</span><b>Start a collection by hand</b></button>` : ''}
+    ${auto.length ? `<div class="sec-title"><h2>Made for you</h2><span class="lnk" style="color:var(--ink-3)">Updates itself</span></div>${auto.map(collRow).join('')}` : ''}
+    </div>`;
+}
+
+function shuffleSurprise(){
+  const card = $('#scard');
+  const swap = () => {
+    S.surprise = nextSurprise();
+    $('#surpriseSlot').innerHTML = surpriseCard(S.surprise);
+    $('.why').innerHTML = RI.clock + esc(S.surprise.why);
+    palTalk($('.surprise-wrap .peek [data-pal]'));
+  };
+  if (!card || REDUCED) return swap();
+  card.classList.remove('in'); card.classList.add('out');
+  setTimeout(swap, 280);
+}
+// Shake to shuffle (where the browser shares motion without asking)
+(() => {
+  let last = 0;
+  addEventListener('devicemotion', e => {
+    const a = e.accelerationIncludingGravity; if (!a) return;
+    const f = Math.abs(a.x) + Math.abs(a.y) + Math.abs(a.z);
+    if (f > 38 && S.tab === 'rediscover' && (S.rdSeg || 'surprise') === 'surprise' && Date.now() - last > 1200){ last = Date.now(); shuffleSurprise(); }
+  });
+})();
+
+/* Collection detail */
+function openColl(id){
+  S.coll = id; S.collAll = false;
+  renderColl();
+  $('#v-coll').classList.add('on');
+  $('#v-coll .cv-scroll').scrollTop = 0;
+  syncPanel();
+}
+function closeColl(){ S.coll = null; $('#v-coll').classList.remove('on'); renderApp({keepScroll: true}); }
+function renderColl(){
+  const c = findColl(S.coll);
+  if (!c) return closeColl();
+  const cover = coverOf(c), others = c.ms.filter(x => x !== cover), best = c.ms.length ? bestOf(c.ms) : null;
+  const fan = [cover, others[0] || cover, others[1] || others[0] || cover];
+  $('#v-coll').innerHTML = `<div class="cv-scroll">
+    <div class="cv-top sk">
+      <div class="bar"><button class="round sk" data-cv="back" aria-label="Back">${I.prev}</button><span class="cv-tag" style="--c:${c.color || KIND_COLOR[c.kind]}">${c.user ? 'Made by you' : `${c.kind} · auto collection`}</span></div>
+      ${cover ? `<div class="fan" aria-hidden="true"><span class="polaroid p1"><img src="${img(fan[1].img)}" alt=""></span><span class="polaroid p2"><img src="${img(fan[2].img)}" alt=""></span><span class="polaroid p0"><img src="${img(fan[0].img)}" alt=""><span>cover</span></span></div>` : ''}
+    </div>
+    <div class="cv-info"><h1>${esc(c.title)}</h1><span class="sub">${esc(c.sub)}</span>${c.auto ? `<span class="auto-note">${RI.sync}Updates itself as new meals arrive</span>` : ''}</div>
+    <div class="cv-btns"><button class="btn secondary sk" data-cv="pin" aria-pressed="${S.pinned.has(c.id)}">${RI.pin}${S.pinned.has(c.id) ? 'Pinned' : 'Pin'}</button><button class="btn primary sk" data-cv="share">${RI.share}Share</button></div>
+    ${c.ms.length ? `<div class="cv-grid">${c.ms.map(x => `<button class="cv-meal" data-meal="${x.id}" aria-label="${esc(x.name)}, ${fmtShort(x)}"><img src="${img(x.img)}" alt="" loading="lazy">${x === best && c.ms.length > 2 ? '<span class="best" aria-label="Best rated">★</span>' : ''}<b>${x.d} ${MON[x.m]}</b><span>${esc(c.kind === 'Place' ? x.name : x.home ? 'Home' : x.place)}</span></button>`).join('')}</div>`
+      : `<div class="cempty sk" style="margin:14px">${pal('bao', 'meh', 70)}<b>No meals in here</b></div>`}
+    ${c.user ? `<button class="link cv-del" data-cv="delete" style="color:#C2362A">Delete collection</button>` : ''}
+  </div>`;
+}
+$('#v-coll').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const c = findColl(S.coll), act = t.dataset.cv;
+  if (act === 'back') return closeColl();
+  if (act === 'pin'){ togglePin(c.id); return renderColl(); }
+  if (act === 'share') return toast(`Share “${c.title}” as a picture`, 'pal:pizza:snap');
+  if (act === 'delete'){
+    if (!t.dataset.sure){ t.dataset.sure = 1; return t.textContent = 'Tap again to delete'; }
+    S.userColls = S.userColls.filter(u => u.id !== c.id); S.pinned.delete(c.id);
+    closeColl(); return toast('Collection deleted', 'pal:nellie:meh');
+  }
+  if (t.dataset.meal) return openMeal(+t.dataset.meal, $('img', t));
+});
+function togglePin(id){
+  const on = !S.pinned.has(id);
+  on ? S.pinned.add(id) : S.pinned.delete(id);
+  toast(on ? 'Pinned to the top' : 'Unpinned', on ? 'pal:sushi:good' : 'ok');
+}
+
+/* New collection */
+function openNewColl(){
+  S.nc = {title: '', color: SWATCHES[0], picks: [], cover: null};
+  renderNewColl();
+  $('#v-newcoll').classList.add('on');
+  syncPanel();
+}
+function closeNewColl(){ S.nc = null; $('#v-newcoll').classList.remove('on'); syncPanel(); }
+function ncChoices(){
+  // One of each dish, newest first
+  const seen = new Set();
+  return [...S.library].sort(byNewest).filter(x => !String(x.img).startsWith('data:') && !seen.has(x.name) && seen.add(x.name)).slice(0, 24);
+}
+function renderNewColl(){
+  const n = S.nc, picks = n.picks.map(id => S.library.find(x => x.id === id)).filter(Boolean);
+  const cover = picks.find(x => x.id === n.cover) || picks[0];
+  $('#v-newcoll').innerHTML = `
+    <header class="nc-head sk"><button class="textbtn" data-nc="cancel">Cancel</button><h1>New collection</h1><span style="width:58px"></span></header>
+    <div class="nc-body">
+      <div class="nc-preview sk" style="--c:${n.color}">${cover ? `<img src="${img(cover.img)}" alt="">` : '<span class="ph"></span>'}<div><small>PREVIEW</small><b id="ncTitle">${esc(n.title || 'Untitled collection')}</b><span>${plural(picks.length, 'meal')} · made by you</span></div></div>
+      <label class="flabel" for="ncName">NAME</label>
+      <input class="tin" id="ncName" value="${esc(n.title)}" placeholder="Things I want to cook again" autocomplete="off">
+      <p class="flabel">CARD COLOUR</p>
+      <div class="swatches" role="group" aria-label="Card colour">${SWATCHES.map(c => `<button class="swatch" data-ncolor="${c}" style="background:${c}" aria-pressed="${n.color === c}" aria-label="Colour"></button>`).join('')}</div>
+      <div class="sec-title" style="margin-top:8px"><h2>Pick meals</h2><span class="why sk" style="--sk-bg:var(--yellow)">${picks.length} selected</span></div>
+      <div class="nc-pick">${ncChoices().map(x => `<button class="npick" data-npick="${x.id}" aria-pressed="${n.picks.includes(x.id)}"><img src="${img(x.img)}" alt="" loading="lazy"><i></i><span>${esc(x.name)}</span></button>`).join('')}</div>
+      ${picks.length > 1 ? `<div class="sec-title"><h2>Choose a cover</h2><span class="lnk" style="color:var(--ink-3)">From your picks</span></div>
+        <div class="nc-covers">${picks.map(x => `<button data-ncover="${x.id}" aria-pressed="${x === cover}"><img src="${img(x.img)}" alt=""></button>`).join('')}</div>` : ''}
+    </div>
+    <footer class="nc-foot sk"><button class="btn secondary sk" data-nc="cancel">Cancel</button><button class="btn primary sk" data-nc="create"${n.title.trim() && picks.length ? '' : ' disabled'}>Create collection</button></footer>`;
+}
+$('#v-newcoll').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const n = S.nc;
+  if (t.dataset.nc === 'cancel') return closeNewColl();
+  if (t.dataset.ncolor){ n.color = t.dataset.ncolor; return refreshNC(); }
+  if (t.dataset.npick){ const id = +t.dataset.npick; n.picks = n.picks.includes(id) ? n.picks.filter(p => p !== id) : [...n.picks, id]; return refreshNC(); }
+  if (t.dataset.ncover){ n.cover = +t.dataset.ncover; return refreshNC(); }
+  if (t.dataset.nc === 'create'){
+    const id = 'u' + Date.now();
+    userCollections();
+    S.userColls.unshift({id, title: n.title.trim(), color: n.color, ids: n.picks, cover: n.cover});
+    closeNewColl();
+    S.rdSeg = 'collections';
+    renderApp({keepScroll: true});
+    setTimeout(() => { openColl(id); toast('Collection made', 'pal:donut:love'); }, REDUCED ? 0 : 250);
+  }
+});
+function refreshNC(){ const b = $('#v-newcoll .nc-body'), sc = b.scrollTop; renderNewColl(); $('#v-newcoll .nc-body').scrollTop = sc; }
+$('#v-newcoll').addEventListener('input', e => {
+  if (e.target.id !== 'ncName') return;
+  S.nc.title = e.target.value;
+  $('#ncTitle').textContent = S.nc.title || 'Untitled collection';
+  $('[data-nc="create"]').disabled = !(S.nc.title.trim() && S.nc.picks.length);
+});
+
+/* Wander: drift from meal to meal by place, dish and city, never by date */
+const WANDER_LEN = 7;
+function wanderStep(from, seen){
+  const lib = S.library.filter(x => !seen.has(x.id) && !String(x.img).startsWith('data:') && x.name !== from.name);
+  const tries = [
+    ['same place', x => !from.home && x.place === from.place],
+    [`same dish: ${(groupOf(from) || '').toLowerCase()}`, x => groupOf(from) && groupOf(x) === groupOf(from)],
+    [`same cuisine: ${(from.cuisine || '').toLowerCase()}`, x => from.cuisine && x.cuisine === from.cuisine],
+    ['same city', x => cityOf(x) === cityOf(from)],
+  ];
+  // Mix the order a little so the trail doesn't always take the same kind of step
+  const order = [...tries].sort(() => Math.random() - .5);
+  for (const [why, ok] of order){
+    const hits = lib.filter(ok);
+    if (hits.length) return {x: hits[Math.floor(Math.random() * hits.length)], why};
+  }
+  return null;
+}
+function openWander(start){
+  const first = start || S.surprise?.x || S.library[0];
+  if (!first) return toast('Add a few meals first', 'info');
+  S.wander = {trail: [{x: first, why: null}], seen: new Set([first.id]), i: 0};
+  S.wander.trail.push(wanderStep(first, S.wander.seen) || {x: null});
+  renderWander();
+  $('#v-wander').classList.add('on');
+  syncPanel();
+}
+function closeWander(){ S.wander = null; $('#v-wander').classList.remove('on'); syncPanel(); }
+function wcard(step, cls){
+  const x = step.x;
+  return `<div class="wcard sk ${cls}" data-wi="${cls}"><span class="ph"><img src="${img(x.img)}" alt="" draggable="false"></span>
+    <h3>${esc(x.name)}</h3><div class="wrow2"><button class="schip sk" style="--sk-bg:#BFDBFF" data-wplace="${x.id}">${I.pin}${esc(x.home ? 'Home' : placeLabel(x.place))}</button><span>${x.d} ${MON[x.m]} ${YEAR}</span></div></div>`;
+}
+function renderWander(){
+  const w = S.wander, cur = w.trail[w.i], next = w.trail[w.i + 1];
+  const end = w.i >= WANDER_LEN - 1 || !next?.x;
+  const dots = Array.from({length: WANDER_LEN}, (_, k) => `<span class="${k === w.i ? 'on' : ''}"></span>`).join('');
+  $('#v-wander').innerHTML = `
+    <div class="wd-head"><button class="sq-btn sk" data-wd="close" aria-label="Close Wander">${RI.x}</button><div><h1>Wander</h1><p>Drifting by place, dish and city, never by date</p></div></div>
+    <div class="wd-stage" id="wdStage">
+      ${end ? `<div class="wd-end sk">${pal('sippy', 'good', 80, {say: 'Heyyy!'})}<h2>That's a lovely little detour.</h2>
+          <div class="trail-ph">${w.trail.slice(0, w.i + 1).map(s => `<img src="${img(s.x.img)}" alt="">`).join('')}</div>
+          <p>Start from another meal and drift somewhere new.</p>
+          <button class="btn primary sk" data-wd="again">Wander again</button><button class="link" data-wd="close">Back to Rediscover</button></div>`
+        : `${wcard(next, 'next')}${wcard(cur, 'cur')}<span class="because sk" id="because"><small>because</small>${esc(next.why)}</span>`}
+      ${end ? '' : `<div class="wd-trail" aria-hidden="true">${dots}</div>`}
+    </div>
+    ${end ? '' : `<div class="wd-hint">${pal('sippy', 'snap', 70, {say: 'Wait, look!'})}<div class="bub sk"><b>Swipe to keep drifting</b><span>Tap a place to see every meal there.</span></div></div>`}`;
+}
+function wanderNext(){
+  const w = S.wander, cur = $('#v-wander .wcard.cur'), nx = $('#v-wander .wcard.next');
+  if (!nx) return;
+  const nextStep = w.trail[w.i + 1];
+  w.seen.add(nextStep.x.id);
+  w.i++;
+  w.trail[w.i + 1] = wanderStep(nextStep.x, w.seen) || {x: null};
+  if (REDUCED) return renderWander();
+  cur.classList.add('gone'); nx.classList.remove('next'); nx.classList.add('cur');
+  $('#because').style.opacity = 0;
+  setTimeout(renderWander, 380);
+}
+$('#v-wander').addEventListener('click', e => {
+  const t = e.target.closest('button, .wcard.next');
+  if (!t || S.wDragged){ S.wDragged = false; return; }
+  if (t.dataset.wd === 'close') return closeWander();
+  if (t.dataset.wd === 'again'){ const pool = S.library.filter(x => !String(x.img).startsWith('data:')); return openWander(pool[Math.floor(Math.random() * pool.length)]); }
+  if (t.dataset.wplace){
+    const x = S.library.find(y => y.id === +t.dataset.wplace);
+    closeWander();
+    return setTimeout(() => openColl(x.home ? 'place:Home' : findColl(`place:${x.place}`) ? `place:${x.place}` : `trip:${cityOf(x)}`), REDUCED ? 0 : 300);
+  }
+  if (t.matches('.wcard.next')) return wanderNext();
+});
+// Drag the top card sideways to drift on
+(() => {
+  let d = null;
+  const v = $('#v-wander');
+  v.addEventListener('pointerdown', e => {
+    const card = e.target.closest('.wcard.cur');
+    if (!card || e.target.closest('button')) return;
+    d = {card, x: e.clientX, z: zoomOf()}; card.classList.add('dragging'); card.setPointerCapture(e.pointerId);
+  });
+  v.addEventListener('pointermove', e => {
+    if (!d) return;
+    const dx = (e.clientX - d.x) / d.z;
+    d.dx = dx;
+    d.card.style.transform = `translateX(${dx}px) rotate(${-2 + dx / 18}deg)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const {card, dx = 0} = d; d = null;
+    card.classList.remove('dragging'); card.style.transform = '';
+    if (Math.abs(dx) > 70){ S.wDragged = true; wanderNext(); setTimeout(() => S.wDragged = false, 50); }
+  };
+  v.addEventListener('pointerup', end); v.addEventListener('pointercancel', end);
+})();
+
+/* ---------- Plated ---------- */
+const PERIODS = [['month', 'Month'], ['year', 'Year'], ['trip', 'Trip'], ['all', 'All time']];
+function platedRange(){
+  const p = S.plPeriod || 'year';
+  if (p === 'month'){
+    const m = S.plMonth ?? TODAY.m;
+    return {p, label: `${MONTHS[m]} ${YEAR}`, short: MONTHS[m], sub: `${MONTHS[m]} ${YEAR}${m === TODAY.m ? ' · so far' : ''}`, ms: S.library.filter(x => x.m === m)};
+  }
+  if (p === 'trip'){
+    const trips = ['Naxos', 'Porto'].filter(c => S.library.some(x => cityOf(x) === c));
+    const c = trips.includes(S.plTrip) ? S.plTrip : trips[0];
+    const ms = c ? S.library.filter(x => cityOf(x) === c) : [];
+    return {p, trips, trip: c, label: c ? `${c} trip` : 'Trip', short: c || 'Trip', sub: c ? `${c} · ${spanLabel(ms)}` : 'No trips yet', ms};
+  }
+  return {p, label: p === 'all' ? 'all-time' : `${YEAR}`, short: p === 'all' ? 'All time' : `${YEAR}`, sub: p === 'all' ? `Everything since ${MON[Math.min(...S.library.map(x => x.m), TODAY.m)]} ${YEAR}` : `${YEAR} · January to now`, ms: S.library};
+}
+function platedStats(ms){
+  const count = f => { const o = {}; ms.forEach(x => { const k = f(x); if (k != null) o[k] = (o[k] || 0) + 1; }); return o; };
+  const sorted = o => Object.entries(o).sort((a, b) => b[1] - a[1]);
+  const cuisines = sorted(count(x => x.cuisine)), places = sorted(count(x => x.home ? 'Home' : x.place));
+  const cities = new Set(ms.map(cityOf)), dishes = sorted(count(x => groupOf(x) || x.name));
+  return {
+    n: ms.length, dishes: new Set(ms.map(x => x.name)).size, cuisines, places, dishList: dishes,
+    placesOut: new Set(ms.filter(x => !x.home).map(x => x.place)).size, cities, countries: new Set([...cities].map(c => CITY_COUNTRY[c])),
+    home: ms.filter(x => x.home).length, slots: count(x => x.slot), week: count(x => (dateOf(x.m, x.d).getDay() + 6) % 7),
+    months: count(x => x.m), days: count(x => x.d),
+    top: [...ms].filter(x => x.rating === 5).sort(byNewest),
+  };
+}
+const TILE_C = ['#FFE07A', '#FFD3E2', '#BFEBD8', '#BFDBFF', '#FFD9C2', '#E3DAFF'];
+function renderPlated(enter = false){
+  const r = platedRange(), st = platedStats(r.ms), p = r.p;
+  const i = PERIODS.findIndex(([k]) => k === p);
+  let periodBar = '';
+  if (p === 'month'){
+    const m = S.plMonth ?? TODAY.m;
+    periodBar = `<div class="pl-period"><button class="sq-btn sk" data-plm="-1" aria-label="Previous month"${m <= 0 ? ' disabled' : ''}>${I.prev}</button><strong>${MONTHS[m]}</strong><button class="sq-btn sk" data-plm="1" aria-label="Next month"${m >= TODAY.m ? ' disabled' : ''}>${I.next}</button></div>`;
+  } else if (p === 'trip' && r.trips.length){
+    periodBar = `<div class="opts" style="justify-content:center">${r.trips.map(c => `<button class="opt sk" data-pltrip="${c}" aria-pressed="${c === r.trip}" style="--c:${CITY_MAPS[c].dot}33">${c}</button>`).join('')}</div>`;
+  }
+  const head = `<header class="page-head sk">
+      <div class="row-between"><div><h1>Plated</h1><span class="sub">${esc(r.sub)}</span></div><button class="sq-btn sk" data-act="open-settings" aria-label="Settings">${I.gear}</button></div>
+      <div class="seg sk" style="--n:4;--i:${i}" role="group" aria-label="Period"><span class="seg-ind" aria-hidden="true"></span>${PERIODS.map(([k, l]) => `<button data-plp="${k}" aria-pressed="${k === p}">${l}</button>`).join('')}</div>
+    </header>`;
+  if (!st.n){
+    $('#v-plated').innerHTML = head + `<div class="page-body">${periodBar}<div class="cempty sk">${pal('bao', 'sleepy', 90)}<b>Nothing plated yet</b><span>Meals you log will add up into stats, a story and a poster.</span></div></div>`;
+    return;
+  }
+  // Bars: months for a year, weeks for a month, days for a trip
+  let bars, barsTitle, barsNote;
+  if (p === 'month'){
+    const m = S.plMonth ?? TODAY.m, weeks = [];
+    for (let d = 1; d <= daysIn(m); d += 7) weeks.push({l: `${d}–${Math.min(d + 6, daysIn(m))}`, v: r.ms.filter(x => x.d >= d && x.d < d + 7).length});
+    bars = weeks; barsTitle = 'Meals by week'; barsNote = m === TODAY.m ? 'so far' : '';
+  } else if (p === 'trip'){
+    const days = [...new Set(r.ms.map(x => x.m * 100 + x.d))].sort((a, b) => a - b);
+    bars = days.map(k => ({l: `${k % 100} ${MON[Math.floor(k / 100)]}`, v: r.ms.filter(x => x.m * 100 + x.d === k).length})); barsTitle = 'Meals each day'; barsNote = '';
+  } else {
+    bars = MON.slice(0, TODAY.m + 1).map((l, m) => ({l, v: st.months[m] || 0})); barsTitle = 'Meals logged per month'; barsNote = `${MON[TODAY.m]} so far`;
+  }
+  const maxV = Math.max(1, ...bars.map(b => b.v)), topI = bars.findIndex(b => b.v === maxV);
+  const cTotal = st.cuisines.reduce((n, [, v]) => n + v, 0) || 1, cTop = st.cuisines.slice(0, 5), cOther = cTotal - cTop.reduce((n, [, v]) => n + v, 0);
+  const pct = v => Math.round(v / cTotal * 100);
+  const homeP = Math.round(st.home / st.n * 100);
+  const wk = [0, 1, 2, 3, 4, 5, 6].map(k => st.week[k] || 0), wkMax = Math.max(1, ...wk), wkTop = wk.indexOf(Math.max(...wk));
+  const tiles = [[st.n, 'Meals logged'], [st.dishes, 'Dishes'], [st.cuisines.length, 'Cuisines'], [st.placesOut, 'Places'], [st.cities.size, 'Cities'], [st.countries.size, 'Countries']];
+  const photoFor = name => r.ms.filter(x => (groupOf(x) || x.name) === name).sort((a, b) => b.rating - a.rating)[0];
+  $('#v-plated').innerHTML = head + `<div class="page-body${enter ? ' fade-swap' : ''}" id="plBody">
+    ${periodBar}
+    <button class="story-banner sk" data-act="story"><span class="tag">Story mode</span><b>Play your ${esc(r.label)} Plated</b><span class="play"><i>${RI.play}</i>${storyCards().length} cards · tap to play</span>
+      <span class="cards" aria-hidden="true"><span></span><span></span><span></span></span>${pal('bao', 'love', 84)}</button>
+    <div class="stiles">${tiles.map(([v, l], k) => `<div class="stile sk" style="--c:${TILE_C[k]}"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+    <div class="pcard sk"><div class="hd"><h3>${barsTitle}</h3><span>${barsNote}</span></div>
+      <div class="pbars">${bars.map((b, k) => `<div class="pbar${k === topI ? ' top' : ''}" style="--k:${k}"><em>${b.v}</em><i style="--h:${b.v / maxV * 100}%"></i><small>${b.l}</small></div>`).join('')}</div></div>
+    <div class="pcard sk"><div class="hd"><h3>Cuisines</h3><span>${plural(st.cuisines.length, 'cuisine')}</span></div>
+      <div class="cstack">${cTop.map(([c, v]) => `<span style="flex:${v};background:${CUISINES[c]}" title="${esc(c)}"></span>`).join('')}${cOther > 0 ? `<span style="flex:${cOther};background:#D5DEEC"></span>` : ''}</div>
+      <div class="legend2">${cTop.map(([c, v]) => `<span><span class="dot" style="background:${CUISINES[c]}"></span>${esc(c)}<em>${pct(v)}%</em></span>`).join('')}${cOther > 0 ? `<span><span class="dot" style="background:#D5DEEC"></span>Other<em>${pct(cOther)}%</em></span>` : ''}</div>
+      <p class="note">${cTop.length > 1 ? `${esc(cTop[0][0])} ${cTop[0][1] - cTop[1][1] <= 3 ? 'edged it' : 'won it'}, ${esc(cTop[1][0])} ${cTop[0][1] - cTop[1][1] <= 3 ? 'close behind' : 'next up'}.` : `All ${esc(cTop[0]?.[0] || '')}.`}${st.cuisines.length > 5 ? ` ${st.cuisines.length - 5} more in Other.` : ''}</p></div>
+    <div class="pcard sk"><div class="hd"><h3>Home vs out</h3><span>${st.home} / ${st.n - st.home}</span></div>
+      <div class="split">${homeP ? `<div style="flex:${Math.max(homeP, 18)};background:var(--yellow)">${homeP}% Home</div>` : ''}<div style="flex:${Math.max(100 - homeP, 18)};background:var(--blue);color:#fff;border-left:2.5px solid var(--ink)">${100 - homeP}% Out</div></div></div>
+    <div class="pcard sk"><div class="hd"><h3>By meal</h3></div>
+      <div class="slots4">${SLOT_ORDER.map(s => `<div style="background:${SLOT_COLOR[s]}"><b>${st.slots[s] || 0}</b><span>${s}</span></div>`).join('')}</div></div>
+    <div class="pcard sk"><div class="hd"><h3>Busiest day of the week</h3></div>
+      <div class="pbars wkbars">${wk.map((v, k) => `<div class="pbar${k === wkTop ? ' top' : ''}" style="--k:${k}"><i style="--h:${v / wkMax * 100}%"></i><small>${'MTWTFSS'[k]}</small></div>`).join('')}</div>
+      <p class="note">${WDL[(wkTop + 1) % 7]}s are your big food day.</p></div>
+    <div class="pcard sk"><div class="hd"><h3>Top places</h3><button class="lnk" data-tab-go="map" style="color:var(--blue-ink);font-weight:800;font-size:13px">On the map</button></div>
+      <div class="rank">${st.places.slice(0, 4).map(([pl, v], k) => { const x = r.ms.filter(y => (y.home ? 'Home' : y.place) === pl).sort(byNewest)[0];
+        return `<button data-coll="place:${esc(pl)}"><span class="n">${k + 1}</span><img src="${img(x.img)}" alt=""><span><b>${esc(pl)}</b><small>${esc(cityOf(x))}</small></span><span class="v">${plural(v, 'meal')}</span></button>`; }).join('')}</div></div>
+    <div class="pcard sk"><div class="hd"><h3>Most-loved dishes</h3><span>times had</span></div>
+      <div class="rank">${st.dishList.slice(0, 4).map(([d, v], k) => { const x = photoFor(d);
+        return `<button data-meal="${x.id}"><span class="n">${k + 1}</span><img src="${img(x.img)}" alt=""><span><b>${esc(d)}</b><small>${esc(x.cuisine || '')}</small></span><span class="v">×${v}</span></button>`; }).join('')}</div></div>
+    ${st.top.length ? `<div class="pcard sk"><div class="hd"><h3>Top-rated meals</h3><span>★★★★★</span></div>
+      <div class="rank">${st.top.slice(0, 4).map(x => `<button data-meal="${x.id}" style="grid-template-columns:44px minmax(0,1fr) auto"><img src="${img(x.img)}" alt=""><span><b>${esc(x.name)}</b><small>${esc(x.home ? 'Home' : x.place)} · ${x.d} ${MON[x.m]}</small></span><span class="stars">${stars(5)}</span></button>`).join('')}</div></div>` : ''}
+    <button class="btn primary sk" data-act="poster">See your poster ${RI.arrow}</button>
+  </div>`;
+}
+
+/* Story mode: tap through cards. Right side → next, left side → back. */
+const STORY_BG = ['#FFE07A', '#BFDBFF', '#FFD3E2', null, '#FFE07A', '#FFD9C2', '#E3DAFF', '#BFDBFF', '#FFD3E2', '#FFE07A'];
+// Opaque tint of a colour, so nothing behind the story shows through
+function tint(hex, amt){
+  const n = parseInt(hex.slice(1), 16), ch = [n >> 16, n >> 8 & 255, n & 255].map(v => Math.round(v + (255 - v) * amt));
+  return '#' + ch.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+// Story building blocks
+const abs = (x, y, inner, extra = '') => `<span class="abs" style="left:${x}px;top:${y}px;${extra}">${inner}</span>`;
+const spark = (x, y, s = 20, c = '#FFFFFF', d = 0) => `<svg class="abs spark" style="left:${x}px;top:${y}px;animation-delay:${d}s" width="${s}" height="${s}" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" fill="${c}" stroke="#1F2A44" stroke-width="1.8" stroke-linejoin="round"/></svg>`;
+const pola = (x, {left, top, w = 150, rot = 0, label = '', d = 0, z = 1}) =>
+  `<span class="pola" style="left:${left}px;top:${top}px;width:${w}px;--r:${rot}deg;--d:${d}s;z-index:${z}"><img src="${img(x.img)}" alt="">${label ? `<b>${label}</b>` : ''}</span>`;
+const say = (x, y, text, side = 'l') => `<span class="say ${side}" style="left:${x}px;top:${y}px">${text}</span>`;
+const stage = (h, inner) => `<div class="art"><div class="st-stage" style="height:${h}px">${inner}</div></div>`;
+const facts = list => `<div class="st-facts">${list.filter(Boolean).map((f, k) => `<span class="fact" style="--d:${.25 + k * .08}s">${f}</span>`).join('')}</div>`;
+const ICON_HOUSE = '<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="#FFE07A" stroke="#1F2A44" stroke-width="2" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>';
+const ICON_FORK = '<svg aria-hidden="true" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round"><path d="M7 3v7a2 2 0 0 0 4 0V3M9 12v9M17 3c-2 2-2.5 5-2 8h2v10"/></svg>';
+
+function storyCards(){
+  const r = platedRange(), st = platedStats(r.ms), ms = r.ms;
+  if (!st.n) return [];
+  const photos = ms.filter(x => !String(x.img).startsWith('data:'));
+  const bestPhoto = list => [...list].filter(x => !String(x.img).startsWith('data:')).sort((a, b) => b.rating - a.rating || byNewest(a, b));
+  const cards = [];
+
+  // 1 · Cover: the whole gang turns up
+  cards.push({html: `<span class="chip sk">PLATTER · PLATED</span><h2 class="xl">Your ${esc(r.short)},<br>plated</h2><p class="lead">${esc(r.sub)}</p>
+    ${stage(300, `<span class="floor"></span>
+      ${abs(4, 26, pal('sushi', 'hi', 74))}${abs(258, 6, pal('donut', 'love', 70))}${abs(110, -6, pal('nellie', 'love', 72))}
+      ${abs(0, 186, pal('pizza', 'love', 82))}${abs(256, 184, pal('sippy', 'good', 76))}${abs(96, 104, pal('bao', 'love', 160))}
+      ${spark(60, 130, 22, '#FFFFFF')}${spark(300, 120, 18, '#FF8FB8', .4)}${spark(200, 20, 16, '#BFDBFF', .8)}`)}
+    ${facts([`${plural(st.n, 'meal')}`, `${plural(st.cities.size, 'city')}`, `${st.cuisines.length} cuisines`])}`});
+
+  // 2 · The big number, shown as a wall of plates
+  const span = r.p === 'trip' ? new Set(ms.map(x => `${x.m}-${x.d}`)).size : r.p === 'month' ? ((S.plMonth ?? TODAY.m) === TODAY.m ? TODAY.d : daysIn(S.plMonth)) / 7 : (dateOf(TODAY.m, TODAY.d) - dateOf(0, 1)) / 864e5 / 7;
+  const rate = `${Math.max(1, Math.round(st.n / Math.max(1, span)))} a ${r.p === 'trip' ? 'day' : 'week'}`;
+  const wall = [...photos].sort(byNewest).slice(0, 42);
+  cards.push({html: `<span class="chip sk">THE BIG NUMBER</span><h2><span class="mega">${st.n}</span>meals plated</h2>
+    ${stage(400, `<div class="wall">${wall.map((x, k) => `<img src="${img(x.img)}" alt="" style="--k:${k};--r:${(k * 37 % 9) - 4}deg">`).join('')}</div>
+      ${abs(238, 290, pal('burger', 'love', 104))}${say(110, 318, 'That\'s a lot<br>of plates!', 'r')}`)}
+    ${facts([`≈ ${rate}`, `${st.dishes} different dishes`, `${st.placesOut} places`])}`});
+
+  // 3 · Busiest month (or day, for a trip / month): Sandie stands on the tallest bar
+  let bars, barLabel, peakText;
+  if (r.p === 'trip' || r.p === 'month'){
+    const days = [...new Set(ms.map(x => x.m * 100 + x.d))].sort((a, b) => a - b).slice(-10);
+    bars = days.map(k => ({l: `${k % 100}`, v: ms.filter(x => x.m * 100 + x.d === k).length}));
+    const top = bars.reduce((a, b) => b.v > a.v ? b : a);
+    barLabel = 'BUSIEST DAY'; peakText = `The ${top.l}${['th', 'st', 'nd', 'rd'][top.l % 10 > 3 || [11, 12, 13].includes(+top.l) ? 0 : top.l % 10]} was the big one`;
+  } else {
+    bars = MON.slice(0, TODAY.m + 1).map((l, m) => ({l: l[0], full: MONTHS[m], v: st.months[m] || 0}));
+    const top = bars.reduce((a, b) => b.v > a.v ? b : a);
+    barLabel = 'BUSIEST MONTH'; peakText = `${top.full} was your biggest month`;
+  }
+  const mx = Math.max(...bars.map(b => b.v)), mi = bars.findIndex(b => b.v === mx);
+  const low = bars.filter(b => b.v).reduce((a, b) => b.v < a.v ? b : a);
+  cards.push({html: `<span class="chip sk">${barLabel}</span><h2>${esc(peakText)}</h2>
+    <div class="art"><div class="big-bars">${bars.map((b, k) => `<div class="bb${k === mi ? ' top' : ''}" style="--k:${k}">
+        ${k === mi ? `<span class="on-top" style="--shift:${k >= bars.length - 2 ? -24 : k <= 1 ? 24 : 0}px">${pal('sand', 'good', 78)}</span>` : ''}<em>${b.v}</em><i style="--h:${b.v / mx * 100}%"></i><small>${b.l}</small></div>`).join('')}</div></div>
+    ${facts([`${mx} meals at the peak`, low !== bars[mi] ? `Quietest: ${low.full || low.l} (${low.v})` : null])}`});
+
+  // 4 · Top cuisine: a share ring with its pal in the middle
+  const [tc, tv] = st.cuisines[0] || [];
+  if (tc){
+    const pct = Math.round(tv / st.n * 100), col = CUISINES[tc];
+    const pics = bestPhoto(ms.filter(x => x.cuisine === tc)).filter((x, i, a) => a.findIndex(y => y.name === x.name) === i).slice(0, 3);
+    cards.push({bg: tint(col, .62), html: `<span class="chip sk">TOP CUISINE</span><h2>${esc(tc)} was your thing</h2>
+      ${stage(330, `<div class="ring" style="--p:${pct};--c:${col}"><span class="hole">${pal(palFor(tc), 'love', 120)}</span></div>
+        <span class="ring-pct">${pct}%</span>
+        ${pics.map((x, k) => pola(x, {left: [0, 256, 248][k], top: [206, 0, 214][k], w: 92, rot: [-8, 7, -5][k], d: .3 + k * .1})).join('')}
+        ${spark(18, 30, 22, col)}${spark(300, 150, 18, '#FFFFFF', .5)}`)}
+      ${facts([`${tv} ${tc} meals`, ...st.cuisines.slice(1, 3).map(([c, v]) => `<span class="dot" style="background:${CUISINES[c]}"></span>${esc(c)} ${Math.round(v / st.n * 100)}%`)])}`});
+  }
+
+  // 5 · Signature dish: the actual dish you had most
+  const names = {}; ms.forEach(x => names[x.name] = (names[x.name] || 0) + 1);
+  const [sd, sv] = Object.entries(names).sort((a, b) => b[1] - a[1])[0];
+  const sAll = ms.filter(x => x.name === sd).sort((a, b) => a.m - b.m || a.d - b.d), sBest = bestPhoto(sAll);
+  // Only a signature if you actually had it more than once
+  if (sBest.length && sv > 1){
+    const where = {}; sAll.forEach(x => where[x.home ? 'home' : x.place] = (where[x.home ? 'home' : x.place] || 0) + 1);
+    const usual = Object.keys(where).sort((a, b) => where[b] - where[a])[0];
+    cards.push({html: `<span class="chip sk">SIGNATURE DISH</span><h2>${esc(sd)}</h2>
+      ${(() => {
+        const distinct = sBest.filter((x, i, a) => a.findIndex(y => y.img === x.img) === i);
+        const many = distinct.length > 1;
+        return stage(400, `${many ? distinct.slice(1, 3).map((x, k) => pola(x, {left: [210, 196][k], top: [10, 160][k], w: 130, rot: [9, -6][k], d: .15 + k * .1})).join('') : ''}
+          ${pola(sBest[0], {left: many ? 4 : 28, top: 20, w: many ? 226 : 280, rot: -4, d: 0, z: 3})}
+          <span class="sticker" style="left:${many ? 180 : 254}px;top:0">×${sv}</span>
+          ${abs(250, 318, pal(palFor(sAll[0].cuisine), 'love', 92))}${say(150, 340, 'Again?!', 'r')}
+          ${spark(12, 300, 20, '#FFFFFF')}${spark(110, 340, 16, '#FF8FB8', .5)}`);
+      })()}
+      ${facts([`First: ${sAll[0].d} ${MON[sAll[0].m]}`, `Latest: ${sAll[sAll.length - 1].d} ${MON[sAll[sAll.length - 1].m]}`, usual === 'home' ? 'Usually at home' : `Usually at ${esc(usual)}`])}`});
+  }
+
+  // 6 · Your table: the place you went back to most
+  const out = st.places.filter(([p]) => p !== 'Home');
+  if (out[0]){
+    const [pl, pv] = out[0], px = bestPhoto(ms.filter(x => x.place === pl)).filter((x, i, a) => a.findIndex(y => y.name === x.name) === i);
+    const fav = {}; ms.filter(x => x.place === pl).forEach(x => fav[x.name] = (fav[x.name] || 0) + 1);
+    const quote = ms.filter(x => x.place === pl && x.note).sort(byNewest)[0];
+    cards.push({html: `<span class="chip sk">YOUR TABLE</span><h2>${esc(pl)}</h2><p class="lead">${plural(new Set(ms.filter(x => x.place === pl).map(x => `${x.m}-${x.d}`)).size, 'visit')} · ${plural(pv, 'meal')}</p>
+      ${stage(390, `${px.slice(0, 3).map((x, k) => pola(x, {left: [-2, 96, 200][k], top: [26, 0, 32][k], w: [140, 158, 140][k], rot: [-8, 2, 8][k], d: k * .1, z: k === 1 ? 3 : 1})).join('')}
+        ${quote ? `<span class="quote" style="top:226px">“${esc(quote.note)}”<b>— ${esc(quote.name)}</b></span>` : ''}
+        ${abs(256, quote ? 286 : 220, pal('crois', 'hi', 92))}${spark(20, 340, 20, '#FFFFFF')}`)}
+      ${facts([`Favourite: ${esc(Object.keys(fav).sort((a, b) => fav[b] - fav[a])[0])}`, AREA[pl] ? esc(AREA[pl]) : esc(cityOf(px[0]))])}`});
+  }
+
+  // 7 · Home vs out
+  const hp = Math.round(st.home / st.n * 100);
+  const homeTop = Object.entries(ms.filter(x => x.home).reduce((o, x) => (o[x.name] = (o[x.name] || 0) + 1, o), {})).sort((a, b) => b[1] - a[1])[0];
+  cards.push({html: `<span class="chip sk">HOME VS OUT</span><h2>${hp >= 50 ? 'A homebody, mostly' : 'Out and about'}</h2>
+    ${stage(390, `<div class="hv">
+        <div class="hv-box" style="background:var(--yellow)">${ICON_HOUSE}<b>${st.home}</b><span>at home</span></div>
+        <div class="hv-box" style="background:var(--blue);color:#fff">${ICON_FORK}<b>${st.n - st.home}</b><span>eaten out</span></div>
+      </div>
+      <div class="split st-split">${hp ? `<div style="flex:${hp};background:var(--yellow)">${hp}%</div>` : ''}<div style="flex:${100 - hp};background:var(--blue);color:#fff;border-left:2.5px solid var(--ink)">${100 - hp}%</div></div>
+      ${abs(196, 238, pal('nellie', hp >= 50 ? 'sleepy' : 'love', 130))}${say(60, 272, hp >= 50 ? 'Cosy bowl<br>season' : 'Who\'s<br>cooking?', 'r')}
+      ${spark(20, 230, 20, '#FFFFFF')}${spark(320, 222, 16, '#FFE07A', .5)}`)}
+    ${facts([homeTop ? `Most made at home: ${esc(homeTop[0])}` : null, out[0] ? `Most out at: ${esc(out[0][0])}` : null])}`});
+
+  // 8 · Trips, as postcards joined by a dotted route
+  const trips = [...st.cities].filter(c => c !== 'London');
+  if (trips.length){
+    cards.push({html: `<span class="chip sk">ON THE ROAD</span><h2>You ate your way through ${trips.join(' & ')}</h2>
+      ${stage(380, `<svg class="route" viewBox="0 0 340 300" aria-hidden="true"><path d="M70 230 C 120 120, 220 260, 270 90" fill="none" stroke="#1F2A44" stroke-width="3" stroke-dasharray="2 9" stroke-linecap="round"/>
+          <g transform="translate(162 168) rotate(-28)"><path d="M-14 0 L14 0 M2 -10 L8 0 L2 10 M-10 -5 L-6 0 L-10 5" fill="none" stroke="#1F2A44" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g></svg>
+        ${trips.slice(0, 2).map((c, k) => { const x = bestPhoto(ms.filter(y => cityOf(y) === c))[0];
+          return pola(x, {left: k ? 184 : 0, top: k ? 10 : 132, w: 156, rot: k ? 6 : -6, label: `${c} <small>${plural(ms.filter(y => cityOf(y) === c).length, 'meal')}</small>`, d: k * .15}); }).join('')}
+        <span class="stamp" style="left:116px;top:22px">✈︎ ${trips.length} ${trips.length === 1 ? 'TRIP' : 'TRIPS'}</span>
+        ${abs(256, 270, pal('taco', 'snap', 88))}`)}
+      ${facts([`${plural(ms.filter(x => cityOf(x) !== 'London').length, 'meal')} away`, `${plural(st.countries.size, 'country')}`])}`});
+  }
+
+  // 9 · Five stars, each with a gold sticker
+  if (st.top.length){
+    const best = bestPhoto(st.top).filter((x, i, a) => a.findIndex(y => y.name === x.name) === i).slice(0, 6);
+    cards.push({html: `<span class="chip sk">FIVE STARS</span><h2>${st.top.length} plates got the full five</h2>
+      ${stage(390, `<div class="star-grid">${best.map((x, k) => `<span class="sg" style="--r:${[-4, 3, -2, 4, -3, 2][k]}deg;--d:${k * .07}s"><img src="${img(x.img)}" alt=""><i>★</i></span>`).join('')}</div>
+        ${abs(40, 284, pal('donut', 'love', 96))}${say(150, 306, 'The ones you\'d<br>go back for', 'l')}${spark(320, 290, 20, '#FFC93C')}`)}
+      ${facts([`${Math.round(st.top.length / st.n * 100)}% of everything`, best[0] ? `Including ${esc(best[0].name)}` : null])}`});
+  }
+
+  // 10 · Wrap up, with a peek of the poster
+  const peek = bestPhoto(photos).filter((x, i, a) => a.findIndex(y => y.name === x.name) === i).slice(0, 4);
+  cards.push({html: `<span class="chip sk">THAT'S A WRAP</span><h2>That's your ${esc(r.short)}, plated.</h2>
+    ${stage(330, `<div class="mini-poster"><small>PLATTER · PLATED</small><b>My ${esc(r.short)}, plated.</b>
+        <span class="mp-photos">${peek.map(x => `<img src="${img(x.img)}" alt="">`).join('')}</span>
+        <span class="mp-stats"><i>${st.n}<small>meals</small></i><i>${st.dishes}<small>dishes</small></i><i>${st.cities.size}<small>cities</small></i></span></div>
+      ${abs(-4, 214, pal('pizza', 'love', 96))}${abs(260, 210, pal('bao', 'love', 92))}${spark(40, 30, 22, '#FF8FB8')}${spark(300, 40, 18, '#FFFFFF', .5)}`)}
+    <button class="btn primary sk" data-st="poster">See your poster ${RI.arrow}</button><button class="link" data-st="replay">Watch again</button>`});
+  return cards;
+}
+let storyTimer;
+function openStory(){
+  S.story = {i: 0, cards: storyCards()};
+  if (!S.story.cards.length) return;
+  renderStory();
+  $('#v-story').classList.add('on');
+  syncPanel();
+}
+function closeStory(){ clearTimeout(storyTimer); S.story = null; $('#v-story').classList.remove('on'); syncPanel(); }
+function renderStory(dir = 1){
+  const s = S.story, c = s.cards[s.i], r = platedRange();
+  const v = $('#v-story');
+  v.style.setProperty('--bg', c.bg || STORY_BG[s.i % STORY_BG.length]);
+  v.innerHTML = `<div class="st-prog" aria-hidden="true">${s.cards.map((_, k) => `<span class="${k < s.i ? 'done' : k === s.i ? 'now' : ''}"><i></i></span>`).join('')}</div>
+    <div class="st-top"><span class="pill-btn sk">${MI.cal}${esc(r.p === 'all' ? 'All time' : r.p === 'trip' ? r.short : r.p === 'month' ? r.short : 'This year')}</span><button class="round sk" data-st="close" aria-label="Close story">${RI.x}</button></div>
+    <button class="st-tap l" data-st="prev" aria-label="Previous card"></button><button class="st-tap r" data-st="next" aria-label="Next card"></button>
+    <div class="st-card ${dir > 0 ? 'in' : 'back'}" aria-live="polite">${c.html}</div>
+    ${s.i < s.cards.length - 1 ? `<span class="st-next" aria-hidden="true">${s.i ? 'Tap for more' : 'Tap to start'} ${RI.arrow}</span>` : ''}`;
+  // Cards turn by themselves too, a bit slower than reading speed
+  clearTimeout(storyTimer);
+  if (s.i < s.cards.length - 1 && !REDUCED) storyTimer = setTimeout(() => storyGo(1), 6500);
+}
+function storyGo(dir){
+  const s = S.story; if (!s) return;
+  const n = s.i + dir;
+  if (n < 0) return;
+  if (n >= s.cards.length) return;
+  s.i = n; renderStory(dir);
+}
+$('#v-story').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  const a = t.dataset.st;
+  if (a === 'close') return closeStory();
+  if (a === 'next') return storyGo(1);
+  if (a === 'prev') return storyGo(-1);
+  if (a === 'replay'){ S.story.i = 0; return renderStory(); }
+  if (a === 'poster'){ closeStory(); return openPoster(); }
+});
+// Hold to pause, like stories everywhere
+$('#v-story').addEventListener('pointerdown', e => { if (e.target.closest('.st-tap')){ $('#v-story').classList.add('paused'); clearTimeout(storyTimer); } });
+$('#v-story').addEventListener('pointerup', () => { const v = $('#v-story'); if (v.classList.contains('paused')){ v.classList.remove('paused'); } });
+
+/* Poster */
+function openPoster(){ renderPoster(); $('#v-poster').classList.add('on'); syncPanel(); }
+function closePoster(){ $('#v-poster').classList.remove('on'); S.poster = false; syncPanel(); }
+function renderPoster(){
+  S.poster = true;
+  const r = platedRange(), st = platedStats(r.ms);
+  const picks = [...st.top, ...[...r.ms].sort((a, b) => b.rating - a.rating)].filter((x, i, a) => a.findIndex(y => y.name === x.name) === i && !String(x.img).startsWith('data:')).slice(0, 6);
+  const spots = [[0, 0, -5], [34, 6, 3], [66, 0, 6], [2, 50, 4], [35, 52, -3], [67, 48, -6]];
+  const [sd, sv] = st.dishList[0] || ['—', 0], sx = r.ms.find(x => (groupOf(x) || x.name) === sd);
+  const topCity = [...st.cities].map(c => [c, r.ms.filter(x => cityOf(x) === c).length]).sort((a, b) => b[1] - a[1])[0] || ['—', 0];
+  const tiles = [[st.n, 'meals', '#FFFDF6'], [st.dishes, 'dishes', '#FF8FB8'], [st.cuisines.length, 'cuisines', '#9FDDC4'], [st.placesOut, 'places', '#BFDBFF'], [st.cities.size, 'cities', '#B79CF0'], [st.countries.size, 'countries', '#FFFDF6']];
+  $('#v-poster').innerHTML = `<header class="pv-head"><button class="icon-btn" data-pv="back" aria-label="Back">${I.prev}</button><h1>Your poster</h1><span></span></header>
+    <div class="pv-body">
+      <div class="poster sk" id="posterCard">
+        <small>PLATTER · PLATED</small><h2>My ${esc(r.short)},<br>plated.</h2>${pal('bao', 'love', 74)}
+        <div class="collage">${picks.map((x, k) => `<span style="left:${spots[k][0]}%;top:${spots[k][1]}%;transform:rotate(${spots[k][2]}deg)"><img src="${img(x.img)}" alt=""></span>`).join('')}</div>
+        <div class="ptiles">${tiles.map(([v, l, c]) => `<div style="--c:${c}"><b>${v}</b><span>${l}</span></div>`).join('')}</div>
+        <div class="pbig"><div style="background:#FFFDF6">${sx ? `<img src="${img(sx.img)}" alt="">` : ''}<span><small>SIGNATURE DISH</small><b>${esc(sd)} ×${sv}</b></span></div>
+          <div style="background:#FF8A5B"><span><small>TOP CITY</small><b>${esc(topCity[0])}</b><em>${plural(topCity[1], 'meal')}</em></span></div></div>
+      </div>
+      <div class="pv-btns"><button class="btn primary sk" data-pv="share">${RI.share}Share</button><button class="btn secondary sk" data-pv="save">${RI.save}Save</button></div>
+    </div>`;
+}
+$('#v-poster').addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.pv === 'back') return closePoster();
+  if (t.dataset.pv === 'share') return toast('Share sheet opens here', 'pal:pizza:snap');
+  if (t.dataset.pv === 'save') return toast('Saved to Photos', 'pal:sushi:good');
+});
+
+/* ---------- Rediscover + Plated: events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('button');
+  if (!t || !t.closest('#v-rediscover, #v-plated')) return;
+  if (t.dataset.rseg){ if (t.dataset.rseg === S.rdSeg) return; S.rdSeg = t.dataset.rseg; renderRediscover(true); $('#rdBody').scrollTop = 0; return syncPanel(); }
+  if (t.dataset.cfilter){ S.collFilter = t.dataset.cfilter; return refreshCollList(); }
+  if (t.dataset.pin){ togglePin(t.dataset.pin); return refreshCollList(); }
+  if (t.dataset.coll) return openColl(t.dataset.coll);
+  if (t.dataset.rplace) return showOnMap(t.dataset.rplace, false);
+  if (t.dataset.plp){ if (t.dataset.plp === S.plPeriod) return; S.plPeriod = t.dataset.plp; renderPlated(true); return; }
+  if (t.dataset.plm){ S.plMonth = Math.min(TODAY.m, Math.max(0, (S.plMonth ?? TODAY.m) + +t.dataset.plm)); return renderPlated(true); }
+  if (t.dataset.pltrip){ S.plTrip = t.dataset.pltrip; return renderPlated(true); }
+  if (t.dataset.tabGo) return setTab(t.dataset.tabGo);
+});
+function refreshCollList(){
+  const body = $('#rdBody'), sc = body.scrollTop;
+  body.innerHTML = (S.rdSeg === 'collections' ? collectionsBody : surpriseBody)();
+  body.scrollTop = sc;
+}
+$('#v-rediscover').addEventListener('input', e => {
+  if (e.target.id !== 'collSearch') return;
+  S.collQuery = e.target.value;
+  const pos = e.target.selectionStart;
+  const tmp = document.createElement('div'); tmp.innerHTML = collectionsBody();
+  $('#collList').innerHTML = $('#collList', tmp).innerHTML;
+  e.target.setSelectionRange(pos, pos);
+});
+
 /* ---------- Events ---------- */
 document.addEventListener('click', e => {
   const t = e.target.closest('button');
-  if (!t || t.closest('#add') || t.closest('#v-meal')) return;
+  if (!t || t.closest('#add, #v-meal, #v-coll, #v-newcoll, #v-wander, #v-story, #v-poster')) return;
   if (t.matches('[data-go]')) return go(t.dataset.go);
   if (t.matches('[data-back]')) return back();
-  if (t.dataset.meal) return openMeal(+t.dataset.meal);
+  if (t.dataset.meal) return openMeal(+t.dataset.meal, $('img', t));
   if (t.dataset.tlsize){
     // Keep the same month at the top when switching photo size
     const m = $('#tlScroll') && currentTlMonth()?.dataset.m;
     S.tlSize = t.dataset.tlsize;
     renderTimeline(false);
+    if (!REDUCED) $('#tlScroll').classList.add('resize');
     if (m != null) scrollToTlMonth(m);
     return;
   }
@@ -2583,14 +4595,15 @@ document.addEventListener('click', e => {
   }
   if (t.dataset.open){ const [m, d] = t.dataset.open.split('-').map(Number); return openDay(m, d); }
   if (t.dataset.month){ const m = +t.dataset.month; S.cur = {m, d: defaultDay(m)}; S.view = 'month'; return renderApp(); }
-  if (t.dataset.mode){ S.yearMode = t.dataset.mode; return renderApp({keepScroll: true}); }
+  if (t.dataset.mode){ S.yearMode = t.dataset.mode; S.refilter = true; return renderApp({keepScroll: true}); }
   if (t.dataset.cuisine){
     const c = t.dataset.cuisine;
     S.cuisines.has(c) ? S.cuisines.delete(c) : S.cuisines.add(c);
+    S.refilter = true;
     return renderApp({keepScroll: true});
   }
   if (t.dataset.tab){
-    if (t.dataset.tab === 'cal' || t.dataset.tab === 'timeline') return setTab(t.dataset.tab);
+    if (['cal', 'timeline', 'map', 'rediscover', 'plated'].includes(t.dataset.tab)) return setTab(t.dataset.tab);
     return toast(`${t.dataset.tab} is a separate mockup`, 'info');
   }
   if (t.matches('.switch')){
@@ -2604,6 +4617,17 @@ document.addEventListener('click', e => {
 $('#scrim').addEventListener('click', () => { if (S.overlay === 'picker') closeOverlay(); });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && (S.overlay === 'picker' || S.overlay === 'add')) return closeOverlay();
+  if (S.story && (e.key === 'ArrowRight' || e.key === ' ')){ e.preventDefault(); return storyGo(1); }
+  if (S.story && e.key === 'ArrowLeft') return storyGo(-1);
+  if (S.wander && e.key === 'ArrowRight') return wanderNext();
+  if (e.key === 'Escape' && !e.target.closest('input, textarea')){
+    if (S.story) return closeStory();
+    if (S.wander) return closeWander();
+    if (S.nc) return closeNewColl();
+    if (S.meal){ /* handled below */ }
+    else if (S.coll) return closeColl();
+    else if (S.poster) return closePoster();
+  }
   if (e.key === 'Escape' && S.editDay && !S.overlay && !e.target.closest('input')){ if (S.editPlace){ S.editPlace = null; return refreshEdit(); } return closeEdit(); }
   if (e.key === 'Escape' && S.meal && !S.overlay && !e.target.closest('textarea')) return closeMeal();
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && cur() === 'app' && !S.overlay && !S.settings && !S.meal && !S.editDay && S.tab === 'cal' && !e.target.closest('input, textarea, select')){
@@ -2631,6 +4655,15 @@ function jump(step){
     case 'week': app('week'); break;
     case 'day': app('day', {m: 9, d: 10}); break;
     case 'timeline': app('month'); setTab('timeline'); break;
+    case 'map': app('month'); setTab('map'); break;
+    case 'rediscover': app('month'); setTab('rediscover'); break;
+    case 'wander': app('month'); setTab('rediscover'); openWander(); break;
+    case 'collections': app('month'); S.rdSeg = 'collections'; setTab('rediscover'); break;
+    case 'collection': app('month'); S.rdSeg = 'collections'; setTab('rediscover'); openColl('dish:Prawns'); break;
+    case 'new-coll': app('month'); setTab('rediscover'); openNewColl(); break;
+    case 'plated': app('month'); setTab('plated'); break;
+    case 'plated-story': app('month'); setTab('plated'); openStory(); break;
+    case 'poster': app('month'); setTab('plated'); openPoster(); break;
     case 'settings': app('month'); S.settings = true; renderSettings(); renderApp(); break;
     case 'add-source': app('month'); openAdd({m: 9, d: 15}); break;
     case 'add-camera': app('month'); openAdd(TODAY, 'camera'); break;
@@ -2672,18 +4705,35 @@ const NOTES = {
   'add-camera': '<b>Camera.</b> A stand-in viewfinder. Press the shutter to "take" the photo; Platter guesses what it is.',
   'add-library': '<b>Library.</b> Photos from that day first. Ones already in the calendar are marked and can\'t be picked twice.',
   'add-details': '<b>Meal details.</b> ✦ Auto marks what Platter guessed from the photo; edit anything. Only the name is required. Saving drops the meal into the calendar.',
+  rediscover: '<b>Rediscover.</b> A surprise card from your past: something forgotten, from this day a month ago, a 5-star, or a one-off. Shuffle (or shake) for another. Wander drifts from meal to meal. Below: pinned and automatic collections.',
+  wander: '<b>Wander.</b> Drifts from meal to meal by place, dish, cuisine or city, never by date. Swipe the card (or tap the one peeking in, or press →). The note says why the next one follows. Tap a place to see every meal there.',
+  collections: '<b>Collections.</b> Yours and ones made automatically (dishes, places, trips, cuisines) that keep themselves up to date. Search, filter, and pin favourites to the top.',
+  collection: '<b>A collection.</b> Fanned cover photos, Pin and Share, and every meal in it. The star marks the best rated. Tap a photo for its details.',
+  'new-coll': '<b>New collection.</b> Name it, pick a card colour, tick meals and choose a cover. The preview updates as you go.',
+  plated: '<b>Plated.</b> Your stats for this year, a month (‹ ›), a trip, or all time: totals, meals over time, cuisines, home vs out, meal types, busiest weekday, top places, dishes and 5-star plates. Taps go to the place or meal.',
+  'plated-story': '<b>Story mode.</b> Tap the right side for the next card, the left to go back (or ← →). Hold to pause. Cards also turn by themselves. Ends with your poster.',
+  poster: '<b>Poster.</b> A one-page summary to save or share.',
+  map: '<b>Map.</b> Opens on a world overview: one marker per city, merged when they\'re close. Drag, pinch, scroll or use + / − to zoom; tap a marker (or zoom right in) to open that city. In a city, pins show each place with a meal count; tap one for what you ate there, and scroll or pinch out (or tap the globe) to go back to the world.',
   timeline: '<b>Timeline.</b> Every meal, newest first, grouped by day with a note pulled from that day. Switch between a compact grid and large photos. Drag the blue rail (or tap a month) to scrub through the year. Tap a photo for its details, or a date to open that day in the calendar.',
   settings: '<b>Settings.</b> Opened from the gear in the calendar header. Storage, photo access and the reminder toggle reflect onboarding choices.',
 };
 function stepKey(){
   if (S.overlay === 'add') return 'add-' + S.add.step;
   if (!S.overlay && cur() === 'app' && S.editDay) return 'edit-day';
+  if (!S.overlay && cur() === 'app'){
+    if (S.story) return 'plated-story';
+    if (S.wander) return 'wander';
+    if (S.nc) return 'new-coll';
+    if (!S.meal && S.coll) return 'collection';
+    if (!S.meal && S.poster) return 'poster';
+  }
   if (!S.overlay && cur() === 'app' && S.meal) return 'meal';
   if (S.overlay) return S.overlay;
   const c = cur();
   if (c !== 'app') return c;
   if (S.appStep === 'reveal') return 'reveal';
-  return S.settings ? 'settings' : S.tab === 'timeline' ? 'timeline' : S.view;
+  if (!S.settings && S.tab === 'rediscover') return S.rdSeg === 'collections' ? 'collections' : 'rediscover';
+  return S.settings ? 'settings' : ['timeline', 'map', 'plated'].includes(S.tab) ? S.tab : S.view;
 }
 function syncPanel(){
   const k = stepKey();
