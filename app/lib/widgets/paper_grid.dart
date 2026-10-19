@@ -55,34 +55,59 @@ class _GridPainter extends CustomPainter {
 
 /// Nudges the content sideways while its route comes and goes (the mockup's
 /// `slideNext`), so screen changes have direction without moving the paper.
-class _RouteDrift extends StatelessWidget {
+class _RouteDrift extends StatefulWidget {
   const _RouteDrift({required this.child});
 
   final Widget child;
 
+  @override
+  State<_RouteDrift> createState() => _RouteDriftState();
+}
+
+class _RouteDriftState extends State<_RouteDrift> {
   static const _distance = 28.0;
+
+  ModalRoute<Object?>? _route;
+  CurvedAnimation? _enter;
+  CurvedAnimation? _cover;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route == _route) return;
+    _disposeCurves();
+    _route = route;
+    if (route?.animation case final enter?) _enter = easeScreenChange(enter);
+    if (route?.secondaryAnimation case final cover?) {
+      _cover = easeScreenChange(cover);
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeCurves();
+    super.dispose();
+  }
+
+  void _disposeCurves() {
+    _enter?.dispose();
+    _cover?.dispose();
+    _enter = _cover = null;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final route = ModalRoute.of(context);
-    if (route?.animation == null) return child;
-    final enter = CurvedAnimation(
-      parent: route!.animation!,
-      curve: platterEase,
-      reverseCurve: platterEase.flipped,
-    );
-    final cover = CurvedAnimation(
-      parent: route.secondaryAnimation!,
-      curve: platterEase,
-      reverseCurve: platterEase.flipped,
-    );
+    final enter = _enter;
+    final cover = _cover;
+    if (enter == null || cover == null) return widget.child;
     return AnimatedBuilder(
       animation: Listenable.merge([enter, cover]),
       builder: (context, child) => Transform.translate(
         offset: Offset(((1 - enter.value) - cover.value) * _distance, 0),
         child: child,
       ),
-      child: child,
+      child: widget.child,
     );
   }
 }

@@ -71,6 +71,9 @@ class _FloatingArtState extends State<_FloatingArt>
     vsync: this,
     duration: const Duration(milliseconds: 2500),
   )..repeat(reverse: true);
+  late final _offset = _controller
+      .drive(CurveTween(curve: Curves.easeInOut))
+      .drive(Tween(begin: Offset.zero, end: const Offset(0, -6)));
 
   @override
   void dispose() {
@@ -80,15 +83,11 @@ class _FloatingArtState extends State<_FloatingArt>
 
   @override
   Widget build(BuildContext context) {
-    final offset = Tween(
-      begin: Offset.zero,
-      end: const Offset(0, -6),
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     return Center(
       child: AnimatedBuilder(
-        animation: offset,
+        animation: _offset,
         builder: (context, child) =>
-            Transform.translate(offset: offset.value, child: child),
+            Transform.translate(offset: _offset.value, child: child),
         child: Crayon(
           child: SvgPicture.asset(
             'assets/illustrations/welcome_calendar.svg',
