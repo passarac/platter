@@ -50,5 +50,42 @@ ThemeData buildPlatterTheme() {
     ),
     scaffoldBackgroundColor: PlatterColors.cream,
     fontFamily: GoogleFonts.nunito().fontFamily,
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.iOS: PaperPageTransitionsBuilder(),
+        TargetPlatform.android: PaperPageTransitionsBuilder(),
+      },
+    ),
   );
+}
+
+/// Easing for screen changes (the mockup's `cubic-bezier(.2,.8,.2,1)`).
+const platterEase = Cubic(0.2, 0.8, 0.2, 1);
+
+/// Every screen sits on the same paper, so instead of sliding the whole page
+/// across, the new screen just fades in over the old one and the paper looks
+/// still. [PaperGrid] drifts the content on top.
+class PaperPageTransitionsBuilder extends PageTransitionsBuilder {
+  const PaperPageTransitionsBuilder();
+
+  @override
+  Duration get transitionDuration => const Duration(milliseconds: 380);
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return FadeTransition(
+      opacity: CurvedAnimation(
+        parent: animation,
+        curve: platterEase,
+        reverseCurve: platterEase.flipped,
+      ),
+      child: child,
+    );
+  }
 }
