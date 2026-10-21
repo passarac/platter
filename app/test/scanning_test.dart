@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -237,7 +238,53 @@ void main() {
     expect(scanner.starts, 1);
   });
 
+  testWidgets("A scan that can't start says so and offers to try again", (
+    tester,
+  ) async {
+    var empty = 0;
+    final scanner = FakeFoodScanner()
+      ..startError = PlatformException(code: 'scan_failed');
+    await openScanning(tester, scanner, onEmptyCalendar: () => empty++);
+    expect(tester.takeException(), isA<PlatformException>());
+
+    expect(find.text('SOMETHING WENT WRONG'), findsOneWidget);
+    expect(find.text("Couldn't look through your photos"), findsOneWidget);
+    await tester.tap(find.text('Continue with an empty calendar'));
+    expect(empty, 1);
+
+    scanner.startError = null;
+    await tester.tap(find.text('Try again'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(scanner.starts, 2);
+    expect(find.text('FINDING YOUR MEALS'), findsOneWidget);
+    expect(find.text('Looking through your photos…'), findsOneWidget);
+  });
+
   group('Relaunching mid-scan', () {
+    testWidgets('with selected photos puts their screen back under the scan', (
+      tester,
+    ) async {
+      useIPhoneSize(tester);
+      final scanner = FakeFoodScanner();
+      await tester.pumpWidget(
+        PlatterApp(
+          photos: FakePhotoLibrary(access: PhotoAccess.limited),
+          progress: FakeOnboardingProgress(saved: OnboardingStep.scan),
+          scanner: scanner,
+          resumeAt: OnboardingStep.scan,
+        ),
+      );
+      // One frame for the pushes, then let the screens fade in.
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.text('FINDING YOUR MEALS'), findsOneWidget);
+      expect(scanner.starts, 1);
+
+      Navigator.of(tester.element(find.byType(ScanningScreen))).pop();
+      await tester.pumpAndSettle();
+      expect(find.text('Just your selected photos'), findsOneWidget);
+    });
+
     test('with selected photos returns to the scan', () async {
       final step = await resumeStep(
         FakeOnboardingProgress(saved: OnboardingStep.scan),
