@@ -22,17 +22,23 @@ void main() {
       return [
         {
           'id': 'A/L0/001',
+          'photos': ['C/L0/001', 'A/L0/001'],
           'taken': DateTime.utc(2026, 10, 1, 12).millisecondsSinceEpoch,
           'verdict': 'food',
-          'score': 0.9,
         },
-        {'id': 'B/L0/001', 'taken': null, 'verdict': 'maybe', 'score': 0.4},
+        {
+          'id': 'B/L0/001',
+          'photos': ['B/L0/001'],
+          'taken': null,
+          'verdict': 'maybe',
+        },
       ];
     });
 
     final meals = await scanner.meals();
 
     expect(meals.map((m) => m.id), ['A/L0/001', 'B/L0/001']);
+    expect(meals[0].photos, ['C/L0/001', 'A/L0/001']);
     expect(meals[0].taken, DateTime.utc(2026, 10, 1, 12).toLocal());
     expect(meals[1].taken, isNull);
     expect(meals.map((m) => m.verdict), [MealVerdict.food, MealVerdict.maybe]);

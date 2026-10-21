@@ -23,17 +23,39 @@
       }
     }
 
-    /// Draws the image at 4×4 pixels and hashes the bytes.
+    /// Hashes the image's 4×4-pixel thumbnail.
     private static func fingerprint(_ image: CGImage) -> Int {
-      var pixels = [UInt8](repeating: 0, count: 4 * 4 * 4)
-      pixels.withUnsafeMutableBytes { buffer in
-        CGContext(
-          data: buffer.baseAddress, width: 4, height: 4, bitsPerComponent: 8,
-          bytesPerRow: 16, space: CGColorSpaceCreateDeviceRGB(),
-          bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
-        )?.draw(image, in: CGRect(x: 0, y: 0, width: 4, height: 4))
-      }
-      return pixels.reduce(17) { ($0 &* 31 &+ Int($1)) & 0xFFFF_FFFF }
+      tinyPixels(image, size: 4).reduce(17) { ($0 &* 31 &+ Int($1)) & 0xFFFF_FFFF }
     }
+  }
+
+  /// Stands in for Vision's fingerprints on the simulator: the photo shrunk
+  /// to 8×8 pixels, so near-identical photos still come out close.
+  struct StandInFingerprinter: PhotoFingerprinter {
+    let model = "standin1"
+
+    func fingerprint(
+      _ image: CGImage,
+      orientation: CGImagePropertyOrientation
+    ) async throws -> PhotoFingerprint {
+      let pixels = tinyPixels(image, size: 8).map { Float($0) / 255 }
+      let length = pixels.reduce(0) { $0 + $1 * $1 }.squareRoot()
+      return PhotoFingerprint(
+        vector: pixels.map { length > 0 ? $0 / length : 0 }, quality: nil)
+    }
+  }
+
+  /// The image drawn at `size`×`size`, as RGBX bytes.
+  private func tinyPixels(_ image: CGImage, size: Int) -> [UInt8] {
+    var pixels = [UInt8](repeating: 0, count: size * size * 4)
+    pixels.withUnsafeMutableBytes { buffer in
+      CGContext(
+        data: buffer.baseAddress, width: size, height: size,
+        bitsPerComponent: 8, bytesPerRow: size * 4,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+      )?.draw(image, in: CGRect(x: 0, y: 0, width: size, height: size))
+    }
+    return pixels
   }
 #endif

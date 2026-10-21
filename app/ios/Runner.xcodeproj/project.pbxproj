@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F00D00000000000000000041 /* PhotoFingerprinter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000040 /* PhotoFingerprinter.swift */; };
+		F00D00000000000000000043 /* MealGrouper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000042 /* MealGrouper.swift */; };
+		F00D00000000000000000045 /* MealGrouperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000044 /* MealGrouperTests.swift */; };
 		F00D00000000000000000011 /* ScanStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000010 /* ScanStore.swift */; };
 		F00D00000000000000000013 /* FoodScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000012 /* FoodScanner.swift */; };
 		F00D00000000000000000015 /* PhotoLibrarySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000014 /* PhotoLibrarySource.swift */; };
@@ -52,6 +55,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F00D00000000000000000040 /* PhotoFingerprinter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoFingerprinter.swift; sourceTree = "<group>"; };
+		F00D00000000000000000042 /* MealGrouper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealGrouper.swift; sourceTree = "<group>"; };
+		F00D00000000000000000044 /* MealGrouperTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealGrouperTests.swift; sourceTree = "<group>"; };
 		F00D00000000000000000010 /* ScanStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanStore.swift; sourceTree = "<group>"; };
 		F00D00000000000000000012 /* FoodScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScanner.swift; sourceTree = "<group>"; };
 		F00D00000000000000000014 /* PhotoLibrarySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibrarySource.swift; sourceTree = "<group>"; };
@@ -97,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
+				F00D00000000000000000044 /* MealGrouperTests.swift */,
 				F00D0000000000000000001C /* FoodScannerTests.swift */,
 				F00D00000000000000000005 /* FoodClassifierTests.swift */,
 			);
@@ -145,6 +152,8 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
+				F00D00000000000000000040 /* PhotoFingerprinter.swift */,
+				F00D00000000000000000042 /* MealGrouper.swift */,
 				F00D00000000000000000010 /* ScanStore.swift */,
 				F00D00000000000000000012 /* FoodScanner.swift */,
 				F00D00000000000000000014 /* PhotoLibrarySource.swift */,
@@ -304,6 +313,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */,
+				F00D00000000000000000045 /* MealGrouperTests.swift in Sources */,
 				F00D0000000000000000001D /* FoodScannerTests.swift in Sources */,
 				F00D00000000000000000006 /* FoodClassifierTests.swift in Sources */,
 			);
@@ -316,6 +326,8 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				F00D00000000000000000041 /* PhotoFingerprinter.swift in Sources */,
+				F00D00000000000000000043 /* MealGrouper.swift in Sources */,
 				F00D00000000000000000011 /* ScanStore.swift in Sources */,
 				F00D00000000000000000013 /* FoodScanner.swift in Sources */,
 				F00D00000000000000000015 /* PhotoLibrarySource.swift in Sources */,

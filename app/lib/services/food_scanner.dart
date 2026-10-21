@@ -8,16 +8,23 @@ enum MealVerdict {
   maybe,
 }
 
-/// A photo the scan thinks is a meal.
+/// A dish the scan found, in one or more photos: repeat shots of the same
+/// plate are grouped into one meal.
 class FoundMeal {
   const FoundMeal({
     required this.id,
+    required this.photos,
     required this.taken,
     required this.verdict,
   });
 
-  /// The photo's id in the photo library.
+  /// The cover photo's id in the photo library, which also identifies the
+  /// meal.
   final String id;
+
+  /// Every photo of the dish, oldest first, the cover among them.
+  final List<String> photos;
+
   final DateTime? taken;
   final MealVerdict verdict;
 }
@@ -50,7 +57,11 @@ class ScanProgress {
   /// Photos Platter can see, not counting screenshots.
   final int total;
   final int checked;
+
+  /// Dishes found; repeat shots of one dish count once.
   final int meals;
+
+  /// Dishes that might not be food.
   final int maybes;
 
   /// Only in iCloud, waiting for Wi-Fi to download.
@@ -61,7 +72,8 @@ class ScanProgress {
 
   final bool running;
 
-  /// Ids of the newest meals, at most 12, for the scanning screen.
+  /// Cover photo ids of the newest meals, at most 12, for the scanning
+  /// screen.
   final List<String> preview;
 }
 
@@ -107,6 +119,7 @@ class DeviceFoodScanner implements FoodScanner {
       for (final meal in meals ?? const <Map<Object?, Object?>>[])
         FoundMeal(
           id: meal['id']! as String,
+          photos: (meal['photos']! as List<Object?>).cast<String>(),
           taken: switch (meal['taken']) {
             final int ms => DateTime.fromMillisecondsSinceEpoch(ms),
             _ => null,
