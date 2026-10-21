@@ -10,7 +10,8 @@ enum OnboardingStep {
   selectedPhotos,
   noAccess,
 
-  /// Not a screen yet: resuming here means "carry on to the scan".
+  /// The scanning screen. Resuming here starts the scan again, which picks
+  /// up where it stopped.
   scan,
 }
 
@@ -68,7 +69,12 @@ Future<OnboardingStep> resumeStep(
   // Past the choice, or just back from Settings: their access decides.
   return switch (await photos.currentAccess()) {
     PhotoAccess.full => OnboardingStep.scan,
-    PhotoAccess.limited => OnboardingStep.selectedPhotos,
+    // Back to the selected photos, unless they'd already moved on to the
+    // scan and haven't been to Settings since.
+    PhotoAccess.limited =>
+      step == OnboardingStep.scan && !fromSettings
+          ? OnboardingStep.scan
+          : OnboardingStep.selectedPhotos,
     PhotoAccess.none => OnboardingStep.noAccess,
     PhotoAccess.notAsked => OnboardingStep.findMeals,
   };

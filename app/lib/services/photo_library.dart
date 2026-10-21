@@ -34,6 +34,10 @@ abstract interface class PhotoLibrary {
   /// Square thumbnails of the newest visible photos, at most [count].
   Future<List<Uint8List>> recentThumbnails(int count);
 
+  /// A square thumbnail of the photo with this [id], or null if Platter
+  /// can't see it (any more).
+  Future<Uint8List?> thumbnail(String id, {int size = 200});
+
   Future<void> openSettings();
 }
 
@@ -81,6 +85,12 @@ class DevicePhotoLibrary implements PhotoLibrary {
       ),
     );
     return thumbs.nonNulls.toList();
+  }
+
+  @override
+  Future<Uint8List?> thumbnail(String id, {int size = 200}) async {
+    final asset = await AssetEntity.fromId(id);
+    return asset?.thumbnailDataWithSize(ThumbnailSize.square(size));
   }
 
   @override
