@@ -304,6 +304,17 @@ void main() {
         );
         await t.pumpAndSettle();
       },
+      'scan failed': (t) async {
+        final scanner = FakeFoodScanner()..startError = StateError('no store');
+        await launchAt(
+          t,
+          OnboardingStep.scan,
+          FakePhotoLibrary(access: PhotoAccess.full),
+          scanner: scanner,
+        );
+        await t.pumpAndSettle();
+        expect(t.takeException(), isA<StateError>());
+      },
       'Settings popup': (t) async {
         await launchAt(
           t,

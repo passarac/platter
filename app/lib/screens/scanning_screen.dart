@@ -48,6 +48,9 @@ class _ScanningScreenState extends State<ScanningScreen>
   /// the last scan's.
   bool _started = false;
 
+  /// [FoodScanner.start] threw, so there's no scan to wait for.
+  bool _failed = false;
+
   late final Timer _patience;
   bool _waitedLongEnough = false;
 
@@ -55,8 +58,10 @@ class _ScanningScreenState extends State<ScanningScreen>
   /// offer to choose different ones.
   bool _limited = false;
 
-  /// Months with a meal in them, counted once the scan finishes.
+  /// Months with a meal in them, counted once the scan finishes; null until
+  /// the count is in.
   int? _months;
+  bool _countingMonths = false;
 
   /// The picker is open; iOS can only show one.
   bool _picking = false;
@@ -68,7 +73,13 @@ class _ScanningScreenState extends State<ScanningScreen>
     duration: const Duration(milliseconds: 320),
   );
 
-  bool get _running => !_started || _progress.running;
+  bool get _running => !_failed && (!_started || _progress.running);
+
+  bool get _found => _progress.meals > 0 || _progress.maybes > 0;
+
+  /// Whether the screen shows the scan as still going. A finished scan keeps
+  /// searching until its months are counted, so the title changes once.
+  bool get _searching => _running || (!_failed && _found && _months == null);
 
   @override
   void initState() {
@@ -102,8 +113,7 @@ class _ScanningScreenState extends State<ScanningScreen>
     try {
       await widget.scanner.start();
     } catch (error, stack) {
-      // Nothing to show for it, but after [ScanningScreen.patience] the
-      // user can still go on to their calendar.
+      // The screen says so, and offers to try again or go on without.
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
@@ -112,11 +122,18 @@ class _ScanningScreenState extends State<ScanningScreen>
           context: ErrorDescription('while starting the food scan'),
         ),
       );
+      if (mounted) setState(() => _failed = true);
+      _animateRunning();
       return;
     }
     if (!mounted) return;
     setState(() => _started = true);
     _settle();
+  }
+
+  Future<void> _retry() async {
+    setState(() => _failed = false);
+    await _scan();
   }
 
   void _onProgress(ScanProgress progress) {
@@ -131,11 +148,12 @@ class _ScanningScreenState extends State<ScanningScreen>
   /// title.
   void _settle() {
     _animateRunning();
-    if (!_running && _months == null) _countMonths();
+    if (!_running && !_failed && !_countingMonths) _countMonths();
   }
 
   void _animateRunning() {
-    final animate = _running && !MediaQuery.disableAnimationsOf(context);
+    if (!mounted) return;
+    final animate = _searching && !MediaQuery.disableAnimationsOf(context);
     if (animate && !_run.isAnimating) {
       _run.repeat(reverse: true);
     } else if (!animate && _run.isAnimating) {
@@ -150,14 +168,29 @@ class _ScanningScreenState extends State<ScanningScreen>
   }
 
   Future<void> _countMonths() async {
-    _months = 0;
-    final meals = await widget.scanner.meals();
-    final months = {
-      for (final meal in meals)
-        if (meal.verdict == MealVerdict.food && meal.taken != null)
-          (meal.taken!.year, meal.taken!.month),
-    };
-    if (mounted) setState(() => _months = months.length);
+    _countingMonths = true;
+    var months = 0;
+    try {
+      final meals = await widget.scanner.meals();
+      months = {
+        for (final meal in meals)
+          if (meal.verdict == MealVerdict.food && meal.taken != null)
+            (meal.taken!.year, meal.taken!.month),
+      }.length;
+    } catch (error, stack) {
+      // The title does without the months.
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'platter',
+          context: ErrorDescription('while counting the months with meals'),
+        ),
+      );
+    }
+    if (!mounted) return;
+    setState(() => _months = months);
+    _animateRunning();
   }
 
   Future<void> _chooseDifferentPhotos() async {
@@ -171,7 +204,9 @@ class _ScanningScreenState extends State<ScanningScreen>
     if (!mounted) return;
     setState(() {
       _started = false;
+      _failed = false;
       _months = null;
+      _countingMonths = false;
     });
     await _scan();
   }
@@ -179,15 +214,27 @@ class _ScanningScreenState extends State<ScanningScreen>
   @override
   Widget build(BuildContext context) {
     final progress = _progress;
-    final running = _running;
+    final running = _searching;
     final meals = progress.meals;
-    final empty = !running && meals == 0 && progress.maybes == 0;
+    final empty = !running && !_failed && !_found;
 
     final String eyebrow;
     final String title;
     final List<String> notes;
     final List<Widget> actions;
-    if (running && !_waitedLongEnough) {
+    if (_failed) {
+      eyebrow = 'Something went wrong';
+      title = "Couldn't look through your photos";
+      notes = const [];
+      actions = [
+        PrimaryButton(label: 'Try again', onPressed: _retry),
+        const SizedBox(height: 10),
+        TextLink(
+          label: 'Continue with an empty calendar',
+          onPressed: widget.onEmptyCalendar,
+        ),
+      ];
+    } else if (running && !_waitedLongEnough) {
       eyebrow = 'Finding your meals';
       title = meals == 0
           ? 'Looking through your photos…'
@@ -268,7 +315,7 @@ class _ScanningScreenState extends State<ScanningScreen>
                 _Burger(
                   pose: running
                       ? _Pose.search
-                      : empty
+                      : empty || _failed
                       ? _Pose.sit
                       : _Pose.cheer,
                   run: _run,
@@ -303,7 +350,9 @@ class _ScanningScreenState extends State<ScanningScreen>
                       ),
                       const SizedBox(height: 12),
                       _ProgressBar(
-                        value: progress.total == 0
+                        value: _failed
+                            ? 0
+                            : progress.total == 0
                             ? (running ? 0 : 1)
                             : progress.checked / progress.total,
                       ),

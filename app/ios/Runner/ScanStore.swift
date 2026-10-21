@@ -32,8 +32,9 @@ final class ScanStore {
 
   init(url: URL) throws {
     let flags = SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX
+    // SQLite hands back a handle even on failure, for the error message;
+    // `deinit` closes it, since the store is a complete object by now.
     guard sqlite3_open_v2(url.path, &db, flags, nil) == SQLITE_OK else {
-      defer { sqlite3_close(db) }
       throw lastError()
     }
     try exec(
@@ -63,13 +64,18 @@ final class ScanStore {
   /// The app's store, in Application Support. Left out of backups: it can
   /// always be rebuilt by scanning again.
   static func standard() throws -> ScanStore {
-    var dir = try FileManager.default.url(
+    let dir = try FileManager.default.url(
       for: .applicationSupportDirectory, in: .userDomainMask,
       appropriateFor: nil, create: true)
+    var url = dir.appendingPathComponent("food_scan.sqlite")
+    // Opening creates the file, which the flag needs; and it goes on the
+    // file alone, so anything else kept in Application Support stays
+    // backed up.
+    let store = try ScanStore(url: url)
     var values = URLResourceValues()
     values.isExcludedFromBackup = true
-    try dir.setResourceValues(values)
-    return try ScanStore(url: dir.appendingPathComponent("food_scan.sqlite"))
+    try url.setResourceValues(values)
+    return store
   }
 
   /// Saves `results`, replacing any earlier result for the same photo.

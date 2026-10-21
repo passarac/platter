@@ -84,11 +84,22 @@ class _PlatterAppState extends State<PlatterApp> {
   void initState() {
     super.initState();
     if (widget.resumeAt == OnboardingStep.scan) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final context = _navigator.currentContext;
-        if (context != null) _photoAccess.onScan(context);
-      });
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(_resumeScan()),
+      );
     }
+  }
+
+  /// Puts the scanning screen back on top. With selected photos, the
+  /// selected-photos screen goes under it, as it would have on the way there.
+  Future<void> _resumeScan() async {
+    final access = await widget.photos.currentAccess();
+    final context = _navigator.currentContext;
+    if (context == null || !context.mounted) return;
+    if (access == PhotoAccess.limited) {
+      Navigator.of(context).push(_photoAccess.routeFor(access)!);
+    }
+    _photoAccess.onScan(context);
   }
 
   @override
