@@ -49,6 +49,11 @@ final class FoodScanService: @unchecked Sendable {
       }
       DispatchQueue.main.async { self.task = nil }
     }
+    // Report it straight away, before `start` returns, so nobody watching
+    // mistakes the last scan's (or no scan's) result for this one's.
+    var starting = progress
+    starting.running = true
+    update(starting)
   }
 
   func stop() {

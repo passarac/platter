@@ -33,7 +33,7 @@ class OnboardingPage extends StatelessWidget {
       body: PaperGrid(
         child: SafeArea(
           child: ArtLayout(
-            header: _TopBar(onBack: onBack, step: step, steps: steps),
+            header: OnboardingTopBar(onBack: onBack, step: step, steps: steps),
             art: Center(child: art),
             footer: Padding(
               padding: const EdgeInsets.fromLTRB(28, 6, 28, 16),
@@ -227,12 +227,21 @@ class TextLink extends StatelessWidget {
 }
 
 /// Back button and onboarding progress dots (`.topbar` in the mockup).
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.step, required this.steps, this.onBack});
+class OnboardingTopBar extends StatelessWidget {
+  const OnboardingTopBar({
+    super.key,
+    required this.step,
+    this.steps = 3,
+    this.onBack,
+    this.showBack = true,
+  });
 
   final int step;
   final int steps;
   final VoidCallback? onBack;
+
+  /// Without the back button the dots stay centred.
+  final bool showBack;
 
   @override
   Widget build(BuildContext context) {
@@ -241,19 +250,22 @@ class _TopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Semantics(
-            button: true,
-            label: 'Back',
-            child: GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onBack ?? () => Navigator.maybePop(context),
-              child: const SizedBox(
-                width: 44,
-                height: 44,
-                child: CustomPaint(painter: _ChevronPainter()),
+          if (showBack)
+            Semantics(
+              button: true,
+              label: 'Back',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onBack ?? () => Navigator.maybePop(context),
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: CustomPaint(painter: _ChevronPainter()),
+                ),
               ),
-            ),
-          ),
+            )
+          else
+            const SizedBox(width: 44, height: 44),
           ExcludeSemantics(
             child: Row(
               children: [

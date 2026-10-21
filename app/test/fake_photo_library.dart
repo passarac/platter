@@ -33,5 +33,8 @@ class FakePhotoLibrary implements PhotoLibrary {
   Future<List<Uint8List>> recentThumbnails(int count) async => const [];
 
   @override
+  Future<Uint8List?> thumbnail(String id, {int size = 200}) async => null;
+
+  @override
   Future<void> openSettings() async => settingsOpens++;
 }

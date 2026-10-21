@@ -7,10 +7,12 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:platter/main.dart';
 import 'package:platter/screens/find_meals_screen.dart';
+import 'package:platter/services/food_scanner.dart';
 import 'package:platter/services/onboarding_progress.dart';
 import 'package:platter/services/photo_library.dart';
 import 'package:platter/widgets/onboarding_page.dart';
 
+import 'fake_food_scanner.dart';
 import 'fake_onboarding_progress.dart';
 import 'fake_photo_library.dart';
 
@@ -45,12 +47,14 @@ class _SlowPickerLibrary extends FakePhotoLibrary {
 Future<void> launchAt(
   WidgetTester tester,
   OnboardingStep step,
-  PhotoLibrary photos,
-) async {
+  PhotoLibrary photos, {
+  FakeFoodScanner? scanner,
+}) async {
   await tester.pumpWidget(
     PlatterApp(
       photos: photos,
       progress: FakeOnboardingProgress(saved: step),
+      scanner: scanner,
       resumeAt: step,
     ),
   );
@@ -247,6 +251,59 @@ void main() {
         OnboardingStep.noAccess,
         FakePhotoLibrary(access: PhotoAccess.none),
       ),
+      // The longest copy the scanning screen shows, mid-scan and done.
+      'scanning': (t) async {
+        final scanner = FakeFoodScanner();
+        await launchAt(
+          t,
+          OnboardingStep.scan,
+          FakePhotoLibrary(access: PhotoAccess.full),
+          scanner: scanner,
+        );
+        scanner.emit(
+          const ScanProgress(
+            total: 112345,
+            checked: 61234,
+            meals: 4567,
+            running: true,
+            preview: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'],
+          ),
+        );
+        await t.pump(const Duration(seconds: 61));
+      },
+      'scan done': (t) async {
+        final scanner = FakeFoodScanner();
+        await launchAt(
+          t,
+          OnboardingStep.scan,
+          FakePhotoLibrary(access: PhotoAccess.limited),
+          scanner: scanner,
+        );
+        scanner.emit(
+          const ScanProgress(
+            total: 112345,
+            checked: 112000,
+            meals: 4567,
+            maybes: 1234,
+            waitingForWifi: 345,
+            preview: [
+              'a',
+              'b',
+              'c',
+              'd',
+              'e',
+              'f',
+              'g',
+              'h',
+              'i',
+              'j',
+              'k',
+              'l',
+            ],
+          ),
+        );
+        await t.pumpAndSettle();
+      },
       'Settings popup': (t) async {
         await launchAt(
           t,
