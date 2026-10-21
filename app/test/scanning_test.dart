@@ -46,7 +46,7 @@ Future<void> openScanning(
 }
 
 FoundMeal meal(String id, DateTime taken) =>
-    FoundMeal(id: id, taken: taken, verdict: MealVerdict.food);
+    FoundMeal(id: id, photos: [id], taken: taken, verdict: MealVerdict.food);
 
 bool enabled(WidgetTester tester, String label) => tester
     .widget<Semantics>(

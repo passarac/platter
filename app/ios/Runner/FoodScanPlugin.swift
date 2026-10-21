@@ -68,13 +68,13 @@ final class FoodScanPlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     ]
   }
 
-  private static func encode(_ meal: ScanResult) -> [String: Any] {
+  private static func encode(_ meal: Meal) -> [String: Any] {
     [
       "id": meal.id,
+      "photos": meal.photos,
       "taken": meal.taken.map { Int($0.timeIntervalSince1970 * 1000) as Any }
         ?? NSNull(),
       "verdict": meal.verdict.rawValue,
-      "score": Double(meal.score),
     ]
   }
 }

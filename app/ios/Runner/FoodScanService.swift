@@ -17,6 +17,15 @@ final class FoodScanService: @unchecked Sendable {
     #endif
   }
 
+  /// Fingerprints meal photos to find repeat shots of a dish.
+  private static func makeFingerprinter() -> PhotoFingerprinter {
+    #if targetEnvironment(simulator)
+      return StandInFingerprinter()
+    #else
+      return VisionFingerprinter()
+    #endif
+  }
+
   private(set) var progress = ScanProgress()
   private var scanner: FoodScanner?
   private var task: Task<Void, Never>?
@@ -61,7 +70,7 @@ final class FoodScanService: @unchecked Sendable {
   }
 
   /// Meals and maybes found so far, newest first.
-  func meals(_ done: @escaping ([ScanResult]) -> Void) throws {
+  func meals(_ done: @escaping ([Meal]) -> Void) throws {
     let scanner = try self.scanner ?? makeScanner()
     self.scanner = scanner
     Task {
@@ -97,6 +106,7 @@ final class FoodScanService: @unchecked Sendable {
     let onWiFi = self.onWiFi
     return FoodScanner(
       classifier: Self.makeClassifier(),
+      fingerprinter: Self.makeFingerprinter(),
       store: try ScanStore.standard(),
       source: source,
       canDownload: { onWiFi.value })

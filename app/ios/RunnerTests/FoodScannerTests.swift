@@ -1,4 +1,5 @@
 import CoreGraphics
+import SQLite3
 import XCTest
 
 @testable import Runner
@@ -73,6 +74,24 @@ private final class FakeClassifier: FoodClassifier {
   }
 }
 
+/// Gives each photo the vector in `vectors`, or one far from every other.
+private final class FakeFingerprinter: PhotoFingerprinter {
+  let model = "fakeprint1"
+  private var vectors: [ObjectIdentifier: [Float]] = [:]
+
+  init(_ source: FakePhotoSource, _ vectors: [String: [Float]] = [:]) {
+    for (i, (id, image)) in source.images.sorted(by: { $0.key < $1.key }).enumerated() {
+      self.vectors[ObjectIdentifier(image)] = vectors[id] ?? [Float(i) * 10, 0]
+    }
+  }
+
+  func fingerprint(
+    _ image: CGImage, orientation: CGImagePropertyOrientation
+  ) async throws -> PhotoFingerprint {
+    PhotoFingerprint(vector: vectors[ObjectIdentifier(image)]!, quality: nil)
+  }
+}
+
 private func blankImage() -> CGImage {
   CGContext(
     data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 0,
@@ -100,11 +119,13 @@ class FoodScannerTests: XCTestCase {
     _ source: FakePhotoSource,
     _ classifier: FakeClassifier,
     store: ScanStore,
+    fingerprints: [String: [Float]] = [:],
     onWiFi: Bool = true
   ) async -> (ScanProgress, FoodScanner) {
     let scanner = FoodScanner(
-      classifier: classifier, store: store, source: source,
-      canDownload: { onWiFi })
+      classifier: classifier,
+      fingerprinter: FakeFingerprinter(source, fingerprints), store: store,
+      source: source, canDownload: { onWiFi })
     var last = ScanProgress()
     await scanner.run { last = $0 }
     return (last, scanner)
@@ -209,6 +230,53 @@ class FoodScannerTests: XCTestCase {
     XCTAssertEqual(progress.preview, (0..<12).map { "p\($0)" })
   }
 
+  func testRepeatShotsOfADishCountOnce() async throws {
+    // p0–p2 are a minute apart; p0 and p1 look alike, p2 doesn't.
+    let now = Date()
+    let source = FakePhotoSource(
+      (0..<3).map { PhotoRef(id: "p\($0)", taken: now.addingTimeInterval(Double(-$0) * 60)) })
+    let classifier = FakeClassifier(
+      source, ["p0": .food, "p1": .maybe, "p2": .food])
+
+    let (progress, scanner) = await scan(
+      source, classifier, store: try temporaryStore(),
+      fingerprints: ["p0": [0, 0], "p1": [0.1, 0], "p2": [5, 0]])
+
+    XCTAssertEqual(progress.meals, 2)
+    XCTAssertEqual(progress.maybes, 0)
+    XCTAssertEqual(progress.preview.count, 2)
+    let meals = await scanner.meals()
+    XCTAssertEqual(meals.map(\.photos), [["p1", "p0"], ["p2"]])
+    XCTAssertEqual(meals.map(\.verdict), [.food, .food])
+  }
+
+  func testOnlyMealPhotosAreFingerprinted() async throws {
+    let source = FakePhotoSource(photos(3))
+    let store = try temporaryStore()
+    _ = await scan(source, FakeClassifier(source, ["p1": .maybe]), store: store)
+
+    let saved = Dictionary(uniqueKeysWithValues: try store.all().map { ($0.id, $0) })
+    XCTAssertNil(saved["p0"]!.fingerprint)
+    XCTAssertNotNil(saved["p1"]!.fingerprint)
+    XCTAssertEqual(saved["p1"]!.fingerprintModel, "fakeprint1")
+  }
+
+  func testMealPhotosWithoutAFingerprintAreCheckedAgain() async throws {
+    let source = FakePhotoSource(photos(2))
+    let store = try temporaryStore()
+    // As saved before fingerprints existed.
+    try store.save([
+      ScanResult(id: "p0", taken: source.all[0].taken, verdict: .food, score: 0.9, model: "fake1"),
+      ScanResult(id: "p1", taken: source.all[1].taken, verdict: .notFood, score: 0.1, model: "fake1"),
+    ])
+
+    let classifier = FakeClassifier(source, ["p0": .food])
+    _ = await scan(source, classifier, store: store)
+
+    XCTAssertEqual(classifier.checked, ["p0"])
+    XCTAssertNotNil(try store.all().first { $0.id == "p0" }!.fingerprint)
+  }
+
   func testMealsLeaveOutPhotosNoLongerVisible() async throws {
     let source = FakePhotoSource(photos(4))
     let classifier = FakeClassifier(
@@ -221,6 +289,7 @@ class FoodScannerTests: XCTestCase {
 
     XCTAssertEqual(meals.map(\.id), ["p1", "p2"])
     XCTAssertEqual(meals.map(\.verdict), [.maybe, .food])
+    XCTAssertEqual(meals.map(\.photos), [["p1"], ["p2"]])
   }
 }
 
@@ -246,6 +315,51 @@ class ScanStoreTests: XCTestCase {
         ScanResult(id: "a", taken: old, verdict: .maybe, score: 0.5, model: "m2"),
         ScanResult(id: "c", taken: nil, verdict: .maybe, score: 0.4, model: "m1"),
       ])
+  }
+
+  func testSavesFingerprints() throws {
+    let store = try temporaryStore()
+    let print = PhotoFingerprint(vector: [0.25, -1.5, 3], quality: 0.4)
+    try store.save([
+      ScanResult(
+        id: "a", taken: nil, verdict: .food, score: 0.9, model: "m1",
+        fingerprint: print, fingerprintModel: "f1"),
+      ScanResult(
+        id: "b", taken: nil, verdict: .food, score: 0.9, model: "m1",
+        fingerprint: PhotoFingerprint(vector: [1], quality: nil),
+        fingerprintModel: "f1"),
+    ])
+
+    let saved = try store.all().sorted { $0.id < $1.id }
+    XCTAssertEqual(saved[0].fingerprint, print)
+    XCTAssertEqual(saved[0].fingerprintModel, "f1")
+    XCTAssertNil(saved[1].fingerprint!.quality)
+  }
+
+  /// Stores made before fingerprints keep their results and gain the columns.
+  func testUpgradesAnOlderStore() throws {
+    let url = FileManager.default.temporaryDirectory
+      .appendingPathComponent("\(UUID().uuidString).sqlite")
+    var db: OpaquePointer?
+    sqlite3_open(url.path, &db)
+    sqlite3_exec(
+      db,
+      "CREATE TABLE results (id TEXT PRIMARY KEY, taken REAL, verdict TEXT NOT NULL, "
+        + "score REAL NOT NULL, model TEXT NOT NULL); "
+        + "INSERT INTO results VALUES ('a', NULL, 'food', 0.9, 'm1');",
+      nil, nil, nil)
+    sqlite3_close(db)
+
+    let store = try ScanStore(url: url)
+    XCTAssertEqual(try store.all().map(\.id), ["a"])
+    XCTAssertNil(try store.all()[0].fingerprint)
+    try store.save([
+      ScanResult(
+        id: "a", taken: nil, verdict: .food, score: 0.9, model: "m1",
+        fingerprint: PhotoFingerprint(vector: [1, 2], quality: nil),
+        fingerprintModel: "f1")
+    ])
+    XCTAssertEqual(try store.all()[0].fingerprint?.vector, [1, 2])
   }
 
   func testKeepsResultsAfterReopening() throws {

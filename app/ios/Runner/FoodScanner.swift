@@ -35,7 +35,11 @@ struct ScanProgress: Equatable {
   var total = 0
 
   var checked = 0
+
+  /// Dishes found, each in one or more photos (see `MealGrouper`).
   var meals = 0
+
+  /// Dishes that might not be food.
   var maybes = 0
 
   /// Only in iCloud, waiting for Wi-Fi to download.
@@ -53,22 +57,26 @@ struct ScanProgress: Equatable {
 }
 
 /// Looks through every photo Platter can see, newest first, and saves a
-/// verdict for each. Photos only in iCloud are left until the rest are done,
-/// then downloaded while `canDownload` allows it (on Wi-Fi).
+/// verdict for each, plus a fingerprint for food and maybes so repeat shots
+/// of a dish count as one meal. Photos only in iCloud are left until the
+/// rest are done, then downloaded while `canDownload` allows it (on Wi-Fi).
 actor FoodScanner {
   init(
     classifier: FoodClassifier,
+    fingerprinter: PhotoFingerprinter,
     store: ScanStore,
     source: PhotoSource,
     canDownload: @escaping @Sendable () -> Bool
   ) {
     self.classifier = classifier
+    self.fingerprinter = fingerprinter
     self.store = store
     self.source = source
     self.canDownload = canDownload
   }
 
   private let classifier: FoodClassifier
+  private let fingerprinter: PhotoFingerprinter
   private let store: ScanStore
   private let source: PhotoSource
   private let canDownload: @Sendable () -> Bool
@@ -80,13 +88,15 @@ actor FoodScanner {
   private let batchSize = 25
 
   private var progress = ScanProgress()
-  private var preview: [(taken: Date, id: String)] = []
+
+  /// Food and maybe photos checked so far, by id.
+  private var found: [String: ScanResult] = [:]
 
   /// Scans until every photo is checked, Wi-Fi is needed, or the task is
   /// cancelled, calling `report` as it goes and once at the end.
   func run(report: @escaping (ScanProgress) -> Void) async {
     progress = ScanProgress(running: true)
-    preview = []
+    found = [:]
 
     let photos = source.photos()
     progress.total = photos.count
@@ -95,13 +105,13 @@ actor FoodScanner {
       uniquingKeysWith: { first, _ in first })
     var todo: [PhotoRef] = []
     for photo in photos {
-      if let result = saved[photo.id], result.model == classifier.model {
+      if let result = saved[photo.id], isCurrent(result) {
         count(result)
       } else {
         todo.append(photo)
       }
     }
-    report(progress)
+    report(summarized())
 
     var inCloud = await check(todo, allowDownload: false, report: report)
     if !inCloud.isEmpty && !Task.isCancelled && canDownload() {
@@ -109,15 +119,21 @@ actor FoodScanner {
     }
     progress.waitingForWiFi = Task.isCancelled ? 0 : inCloud.count
     progress.running = false
-    report(progress)
+    report(summarized())
   }
 
   /// Meals and maybes among the photos Platter can still see, newest first.
-  func meals() -> [ScanResult] {
+  func meals() -> [Meal] {
     let visible = Set(source.photos().map(\.id))
-    return ((try? store.all()) ?? []).filter {
-      $0.verdict != .notFood && visible.contains($0.id)
-    }
+    return MealGrouper.group(
+      ((try? store.all()) ?? []).filter { visible.contains($0.id) })
+  }
+
+  /// Whether `result` came from the current models, so needn't be redone.
+  private func isCurrent(_ result: ScanResult) -> Bool {
+    result.model == classifier.model
+      && (result.verdict == .notFood
+        || result.fingerprintModel == fingerprinter.model)
   }
 
   /// Classifies `photos`, a few at a time in order, and returns the ones
@@ -163,7 +179,7 @@ actor FoodScanner {
           unsaved = []
         }
         if Date().timeIntervalSince(lastReport) > 0.2 {
-          report(progress)
+          report(summarized())
           lastReport = Date()
         }
         startNext()
@@ -193,32 +209,33 @@ actor FoodScanner {
         let found = try? await classifier.classify(
           image, orientation: orientation)
       else { return .failed }
-      return .classified(
-        ScanResult(
-          id: photo.id, taken: photo.taken, verdict: found.verdict,
-          score: found.score, model: found.model))
+      var result = ScanResult(
+        id: photo.id, taken: photo.taken, verdict: found.verdict,
+        score: found.score, model: found.model)
+      if found.verdict != .notFood {
+        // Left without one if this fails, so it's tried again next scan.
+        result.fingerprint = try? await fingerprinter.fingerprint(
+          image, orientation: orientation)
+        if result.fingerprint != nil {
+          result.fingerprintModel = fingerprinter.model
+        }
+      }
+      return .classified(result)
     }
   }
 
   private func count(_ result: ScanResult) {
     progress.checked += 1
-    switch result.verdict {
-    case .food:
-      progress.meals += 1
-      addToPreview(result)
-    case .maybe:
-      progress.maybes += 1
-    case .notFood:
-      break
-    }
+    if result.verdict != .notFood { found[result.id] = result }
   }
 
-  private func addToPreview(_ result: ScanResult) {
-    let taken = result.taken ?? .distantPast
-    let at = preview.firstIndex { $0.taken < taken } ?? preview.count
-    guard at < ScanProgress.previewSize else { return }
-    preview.insert((taken, result.id), at: at)
-    preview = Array(preview.prefix(ScanProgress.previewSize))
-    progress.preview = preview.map(\.id)
+  /// `progress` with meals counted, grouping repeat shots of a dish.
+  private func summarized() -> ScanProgress {
+    let meals = MealGrouper.group(Array(found.values))
+    let food = meals.filter { $0.verdict == .food }
+    progress.meals = food.count
+    progress.maybes = meals.count - food.count
+    progress.preview = food.prefix(ScanProgress.previewSize).map(\.id)
+    return progress
   }
 }
