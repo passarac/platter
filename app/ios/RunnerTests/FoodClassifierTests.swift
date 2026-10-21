@@ -64,6 +64,104 @@ class VisionFoodRulesTests: XCTestCase {
     XCTAssertEqual(verdict([:]), .notFood)
   }
 
+  func testPaintingOfFoodIsNotFood() {
+    XCTAssertEqual(
+      verdict([
+        "art": 0.72, "painting": 0.72, "food": 0.52, "vegetable": 0.52,
+        "bell_pepper": 0.52,
+      ]),
+      .notFood)
+  }
+
+  func testArtWithoutFoodIsNotFood() {
+    XCTAssertEqual(verdict(["art": 0.9, "painting": 0.9, "food": 0.05]), .notFood)
+    XCTAssertEqual(verdict(["art": 0.9, "painting": 0.9]), .notFood)
+  }
+
+  /// A painting of a dish, not just produce, might still be worth a look.
+  func testPaintingOfADishIsMaybe() {
+    XCTAssertEqual(verdict(["art": 0.5, "painting": 0.5, "food": 0.6, "pasta": 0.6]), .maybe)
+  }
+
+  func testPlantsAreNotFood() {
+    XCTAssertEqual(
+      verdict([
+        "grass": 0.69, "outdoor": 0.69, "food": 0.61, "mushroom": 0.61,
+        "vegetable": 0.61,
+      ]),
+      .notFood)
+    XCTAssertEqual(
+      verdict([
+        "dandelion": 0.96, "food": 0.96, "herb": 0.96, "seasonings": 0.96,
+        "plant": 0.89,
+      ]),
+      .notFood)
+  }
+
+  /// An orange on a desk, strawberries held up to the camera.
+  func testProduceWithoutAPlateIsMaybe() {
+    XCTAssertEqual(
+      verdict(["food": 0.58, "fruit": 0.58, "citrus_fruit": 0.58, "oranges": 0.58]),
+      .maybe)
+    XCTAssertEqual(
+      verdict(["food": 0.81, "berry": 0.81, "strawberry": 0.81, "utensil": 0.08]),
+      .maybe)
+  }
+
+  func testProduceInABowlIsFood() {
+    XCTAssertEqual(
+      verdict(["bowl": 0.73, "food": 0.63, "fruit": 0.63, "oranges": 0.59]), .food)
+  }
+
+  /// Vision sees the strawberries more than the cake under them.
+  func testFruitToppedDessertsAreFood() {
+    XCTAssertEqual(
+      verdict([
+        "food": 0.82, "berry": 0.80, "strawberry": 0.80, "candy": 0.50,
+        "tableware": 0.28,
+      ]),
+      .food)
+    XCTAssertEqual(
+      verdict(["food": 0.64, "berry": 0.64, "strawberry": 0.64, "plate": 0.46]),
+      .food)
+  }
+
+  /// Strawberry tarts at a picnic: plates on the grass.
+  func testPicnicOnGrassIsFood() {
+    XCTAssertEqual(
+      verdict([
+        "food": 0.89, "berry": 0.89, "strawberry": 0.89, "plate": 0.77,
+        "grass": 0.54, "outdoor": 0.54,
+      ]),
+      .food)
+  }
+
+  func testDisplayCaseIsNotAMeal() {
+    XCTAssertEqual(
+      verdict([
+        "food": 0.73, "cake": 0.63, "dessert": 0.63, "raw_glass": 0.53,
+      ]),
+      .maybe)
+    XCTAssertEqual(
+      verdict(["food": 0.42, "chocolate": 0.42, "raw_glass": 0.45]), .notFood)
+  }
+
+  func testFriendsWithBeersIsMaybe() {
+    XCTAssertEqual(
+      verdict([
+        "people": 0.95, "drinking_glass": 0.82, "beer": 0.76, "drink": 0.76,
+      ]),
+      .maybe)
+  }
+
+  func testDrinkWithSomeoneInTheBackgroundIsFood() {
+    XCTAssertEqual(
+      verdict([
+        "people": 0.70, "drinking_glass": 0.91, "drink": 0.54, "liquid": 0.54,
+      ]),
+      .food)
+  }
+
   func testScoreIsTheStrongestFoodOrDrinkLabel() {
     XCTAssertEqual(VisionFoodRules.judge(["food": 0.4, "drink": 0.6]).1, 0.6)
   }
