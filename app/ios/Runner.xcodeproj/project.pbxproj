@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F00D00000000000000000011 /* ScanStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000010 /* ScanStore.swift */; };
+		F00D00000000000000000013 /* FoodScanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000012 /* FoodScanner.swift */; };
+		F00D00000000000000000015 /* PhotoLibrarySource.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000014 /* PhotoLibrarySource.swift */; };
+		F00D00000000000000000017 /* FoodScanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000016 /* FoodScanService.swift */; };
+		F00D00000000000000000019 /* FoodScanPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000018 /* FoodScanPlugin.swift */; };
+		F00D0000000000000000001B /* StandInFoodClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D0000000000000000001A /* StandInFoodClassifier.swift */; };
+		F00D0000000000000000001D /* FoodScannerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D0000000000000000001C /* FoodScannerTests.swift */; };
 		F00D00000000000000000002 /* FoodClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000001 /* FoodClassifier.swift */; };
 		F00D00000000000000000004 /* VisionFoodClassifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000003 /* VisionFoodClassifier.swift */; };
 		F00D00000000000000000006 /* FoodClassifierTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00D00000000000000000005 /* FoodClassifierTests.swift */; };
@@ -45,6 +52,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		F00D00000000000000000010 /* ScanStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanStore.swift; sourceTree = "<group>"; };
+		F00D00000000000000000012 /* FoodScanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScanner.swift; sourceTree = "<group>"; };
+		F00D00000000000000000014 /* PhotoLibrarySource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoLibrarySource.swift; sourceTree = "<group>"; };
+		F00D00000000000000000016 /* FoodScanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScanService.swift; sourceTree = "<group>"; };
+		F00D00000000000000000018 /* FoodScanPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScanPlugin.swift; sourceTree = "<group>"; };
+		F00D0000000000000000001A /* StandInFoodClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StandInFoodClassifier.swift; sourceTree = "<group>"; };
+		F00D0000000000000000001C /* FoodScannerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodScannerTests.swift; sourceTree = "<group>"; };
 		F00D00000000000000000001 /* FoodClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodClassifier.swift; sourceTree = "<group>"; };
 		F00D00000000000000000003 /* VisionFoodClassifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisionFoodClassifier.swift; sourceTree = "<group>"; };
 		F00D00000000000000000005 /* FoodClassifierTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodClassifierTests.swift; sourceTree = "<group>"; };
@@ -83,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
+				F00D0000000000000000001C /* FoodScannerTests.swift */,
 				F00D00000000000000000005 /* FoodClassifierTests.swift */,
 			);
 			path = RunnerTests;
@@ -130,6 +145,12 @@
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */,
+				F00D00000000000000000010 /* ScanStore.swift */,
+				F00D00000000000000000012 /* FoodScanner.swift */,
+				F00D00000000000000000014 /* PhotoLibrarySource.swift */,
+				F00D00000000000000000016 /* FoodScanService.swift */,
+				F00D00000000000000000018 /* FoodScanPlugin.swift */,
+				F00D0000000000000000001A /* StandInFoodClassifier.swift */,
 				F00D00000000000000000001 /* FoodClassifier.swift */,
 				F00D00000000000000000003 /* VisionFoodClassifier.swift */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
@@ -283,6 +304,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */,
+				F00D0000000000000000001D /* FoodScannerTests.swift in Sources */,
 				F00D00000000000000000006 /* FoodClassifierTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -294,6 +316,12 @@
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 				7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */,
+				F00D00000000000000000011 /* ScanStore.swift in Sources */,
+				F00D00000000000000000013 /* FoodScanner.swift in Sources */,
+				F00D00000000000000000015 /* PhotoLibrarySource.swift in Sources */,
+				F00D00000000000000000017 /* FoodScanService.swift in Sources */,
+				F00D00000000000000000019 /* FoodScanPlugin.swift in Sources */,
+				F00D0000000000000000001B /* StandInFoodClassifier.swift in Sources */,
 				F00D00000000000000000002 /* FoodClassifier.swift in Sources */,
 				F00D00000000000000000004 /* VisionFoodClassifier.swift in Sources */,
 			);

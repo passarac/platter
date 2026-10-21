@@ -21,8 +21,12 @@ struct VisionFoodClassifier: FoodClassifier {
   ) async throws -> FoodClassification {
     let request = VNClassifyImageRequest()
     request.revision = revision
-    try VNImageRequestHandler(cgImage: image, orientation: orientation)
-      .perform([request])
+    // Thousands of photos go through here in one scan; release each one's
+    // working memory straight away.
+    try autoreleasepool {
+      try VNImageRequestHandler(cgImage: image, orientation: orientation)
+        .perform([request])
+    }
     let labels = Dictionary(
       (request.results ?? []).map { ($0.identifier, $0.confidence) },
       uniquingKeysWith: max
