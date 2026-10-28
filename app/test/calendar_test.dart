@@ -205,14 +205,186 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('October'), findsOneWidget);
 
-    // A swipe pages too, and Today comes back.
+    // A swipe pages too.
     await tester.fling(find.text('Mon'), const Offset(300, 0), 1000);
     await tester.pumpAndSettle();
     expect(find.text('September'), findsOneWidget);
+  });
+
+  testWidgets('Today opens today in the day view from anywhere', (
+    tester,
+  ) async {
+    await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+    await tester.tap(find.bySemanticsLabel('Previous month'));
+    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Today'));
     await tester.pumpAndSettle();
-    expect(find.text('October'), findsOneWidget);
-    expect(find.text('Sat 17 Oct'), findsOneWidget);
+    expect(find.text('17 October'), findsOneWidget);
+    expect(find.text('Saturday · 2 meals'), findsOneWidget);
+    expect(find.text('Lunch'), findsOneWidget);
+    expect(find.text('Dinner'), findsOneWidget);
+  });
+
+  group('Day view', () {
+    testWidgets('shows the meals by slot and pages a day at a time', (
+      tester,
+    ) async {
+      await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+      await tester.tap(find.text('Day'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('17 October'), findsOneWidget);
+      // One meal in a slot gets the wide card; both show time and shots.
+      expect(find.text('12:10 PM'), findsNWidgets(2));
+      expect(find.text('7:42 PM'), findsNWidgets(2));
+      expect(find.text('1 photo'), findsNWidgets(2));
+      expect(find.text("That's the day."), findsOneWidget);
+      expect(find.text('Edit day'), findsOneWidget);
+
+      // Nothing after today.
+      await tester.tap(find.bySemanticsLabel('Next day'));
+      await tester.pumpAndSettle();
+      expect(find.text('17 October'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('Previous day'));
+      await tester.pumpAndSettle();
+      expect(find.text('16 October'), findsOneWidget);
+      expect(find.text('Friday · 0 meals'), findsOneWidget);
+      expect(find.text('Nothing on this day'), findsOneWidget);
+      expect(
+        find.text('No meal photos from Friday 16 October.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('opens from a day in the month and from the week', (
+      tester,
+    ) async {
+      await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+      await tester.tap(find.bySemanticsLabel('See Sat 17 Oct, 2 meals'));
+      await tester.pumpAndSettle();
+      expect(find.text('17 October'), findsOneWidget);
+
+      await tester.tap(find.text('Week'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Monday 12 October, open day'));
+      await tester.pumpAndSettle();
+      expect(find.text('12 October'), findsOneWidget);
+    });
+
+    testWidgets('gives an odd number of meals a wide first card', (
+      tester,
+    ) async {
+      await openCalendar(
+        tester,
+        scanner: FakeFoodScanner(
+          found: [
+            for (final minute in [0, 20, 40])
+              FoundMeal(
+                id: 'd$minute',
+                photos: ['d$minute', 'd$minute-b'],
+                taken: DateTime(2026, 10, 17, 19, minute),
+                verdict: MealVerdict.food,
+              ),
+          ],
+        ),
+      );
+      await tester.tap(find.text('Day'));
+      await tester.pumpAndSettle();
+      expect(find.text('Saturday · 3 meals'), findsOneWidget);
+      expect(find.text('2 photos'), findsNWidgets(3));
+      expect(find.text('7:00 PM'), findsNWidgets(2));
+    });
+  });
+
+  group('Week view', () {
+    testWidgets('lays the week out by meal of the day', (tester) async {
+      await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+      await tester.tap(find.text('Week'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('12–18'), findsOneWidget);
+      expect(find.text('2 meals this week'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('Saturday Lunch, 1 meal, open day'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('Saturday Dinner, 1 meal, open day'),
+        findsOneWidget,
+      );
+      for (final slot in ['Breakfast', 'Lunch', 'Dinner', 'Late night']) {
+        expect(find.text(slot), findsOneWidget);
+      }
+
+      // Back to the week of the first meal, and no further.
+      await tester.tap(find.bySemanticsLabel('Previous week'));
+      await tester.pumpAndSettle();
+      expect(find.text('5–11'), findsOneWidget);
+      expect(find.text('1 meal this week'), findsOneWidget);
+      for (var i = 0; i < 5; i++) {
+        await tester.tap(find.bySemanticsLabel('Previous week'));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Aug – Sep'), findsOneWidget);
+      expect(find.text('31–6'), findsOneWidget);
+
+      // Not into the future either.
+      await tester.tap(find.text('Today'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Week'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Next week'));
+      await tester.pumpAndSettle();
+      expect(find.text('12–18'), findsOneWidget);
+    });
+  });
+
+  group('Year view', () {
+    testWidgets('counts each month\'s days and opens a month', (tester) async {
+      await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+      await tester.tap(find.text('Year'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Your year'), findsOneWidget);
+      expect(find.text('2026'), findsOneWidget);
+      expect(find.text('3 days with meals'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel('October, 2 days with meals'),
+        findsOneWidget,
+      );
+      expect(
+        find.bySemanticsLabel('September, 1 day with meals'),
+        findsOneWidget,
+      );
+      expect(find.bySemanticsLabel('November'), findsOneWidget);
+
+      // Only this year has meals.
+      await tester.tap(find.bySemanticsLabel('Previous year'));
+      await tester.pumpAndSettle();
+      expect(find.text('2026'), findsOneWidget);
+
+      await tester.tap(find.bySemanticsLabel('September, 1 day with meals'));
+      await tester.pumpAndSettle();
+      expect(find.text('September'), findsOneWidget);
+      expect(find.text('Mon 14 Sep'), findsOneWidget);
+    });
+
+    testWidgets('jumping to a date from the year lands on its month', (
+      tester,
+    ) async {
+      await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+      await tester.tap(find.text('Year'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.bySemanticsLabel('Your year 2026. Jump to date'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('5'));
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.text('October'), findsOneWidget);
+      expect(find.text('Mon 5 Oct'), findsOneWidget);
+    });
   });
 
   testWidgets('Opens on the newest meal\'s month when this one is bare', (
@@ -273,9 +445,6 @@ void main() {
     await tester.tap(find.text('Map'));
     await tester.pump();
     expect(find.text('Map is coming soon.'), findsOneWidget);
-    await tester.tap(find.text('Year'));
-    await tester.pump();
-    expect(find.text('The Year view is coming soon.'), findsOneWidget);
     await tester.tap(find.bySemanticsLabel('Add a meal'));
     await tester.pump();
     expect(find.text('Adding a meal is coming soon.'), findsOneWidget);
