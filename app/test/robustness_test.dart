@@ -325,6 +325,37 @@ void main() {
         await t.tap(find.text('Full access'));
         await t.pumpAndSettle();
       },
+      // A month with meals on most days, several on some.
+      'calendar': (t) async {
+        final now = DateTime.now();
+        final scanner = FakeFoodScanner(
+          found: [
+            for (var ago = 0; ago < 28; ago++)
+              for (final hour in [8, 13, 20].take(ago % 3 + 1))
+                FoundMeal(
+                  id: '$ago-$hour',
+                  photos: ['$ago-$hour'],
+                  taken: DateTime(now.year, now.month, now.day - ago, hour),
+                  verdict: MealVerdict.food,
+                ),
+          ],
+        );
+        await launchAt(
+          t,
+          OnboardingStep.calendar,
+          FakePhotoLibrary(access: PhotoAccess.full),
+          scanner: scanner,
+        );
+        await t.pumpAndSettle();
+      },
+      'empty calendar': (t) async {
+        await launchAt(
+          t,
+          OnboardingStep.calendar,
+          FakePhotoLibrary(access: PhotoAccess.none),
+        );
+        await t.pumpAndSettle();
+      },
     };
     for (final MapEntry(key: device, value: size) in sizes.entries) {
       for (final scale in textScales) {
