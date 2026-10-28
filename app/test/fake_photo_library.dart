@@ -17,6 +17,9 @@ class FakePhotoLibrary implements PhotoLibrary {
   /// can't be loaded.
   Uint8List? thumbnailBytes;
 
+  /// The sizes thumbnails were asked for, in order.
+  final thumbnailSizes = <int>[];
+
   @override
   Future<PhotoAccess> currentAccess() async => access;
 
@@ -37,8 +40,10 @@ class FakePhotoLibrary implements PhotoLibrary {
   Future<List<Uint8List>> recentThumbnails(int count) async => const [];
 
   @override
-  Future<Uint8List?> thumbnail(String id, {int size = 200}) async =>
-      thumbnailBytes;
+  Future<Uint8List?> thumbnail(String id, {int size = 200}) async {
+    thumbnailSizes.add(size);
+    return thumbnailBytes;
+  }
 
   @override
   Future<void> openSettings() async => settingsOpens++;
