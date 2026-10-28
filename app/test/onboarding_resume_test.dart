@@ -37,6 +37,7 @@ void main() {
     const selectedPhotos = OnboardingStep.selectedPhotos;
     const noAccess = OnboardingStep.noAccess;
     const scan = OnboardingStep.scan;
+    const calendar = OnboardingStep.calendar;
     for (final (saved, fromSettings, access, expected) in [
       (welcome, false, PhotoAccess.full, welcome),
       // Access set before onboarding doesn't choose for them.
@@ -53,6 +54,9 @@ void main() {
       (selectedPhotos, false, PhotoAccess.notAsked, findMeals),
       (noAccess, false, PhotoAccess.none, noAccess),
       (noAccess, false, PhotoAccess.limited, selectedPhotos),
+      // Onboarding's done: the calendar opens whatever access is now.
+      (calendar, false, PhotoAccess.none, calendar),
+      (calendar, true, PhotoAccess.full, calendar),
     ]) {
       test('${saved.name}${fromSettings ? ' after Settings' : ''} with '
           '${access.name} access → ${expected.name}', () async {
@@ -117,6 +121,16 @@ void main() {
       await launchAt(tester, OnboardingStep.scan, access: PhotoAccess.full);
       expect(find.text("Let's find your meals"), findsOneWidget);
       expect(find.text('Scanning for meals is coming soon.'), findsOneWidget);
+    });
+
+    testWidgets('at the calendar opens it with nothing behind', (tester) async {
+      await launchAt(tester, OnboardingStep.calendar, access: PhotoAccess.full);
+      expect(find.text('Today'), findsOneWidget);
+      expect(find.text('Your calendar is ready'), findsOneWidget);
+      expect(
+        Navigator.of(tester.element(find.text('Today'))).canPop(),
+        isFalse,
+      );
     });
   });
 

@@ -13,6 +13,9 @@ enum OnboardingStep {
   /// The scanning screen. Resuming here starts the scan again, which picks
   /// up where it stopped.
   scan,
+
+  /// The calendar: onboarding is over. Resuming here opens it straight away.
+  calendar,
 }
 
 /// Remembers how far the user got through onboarding. iOS quits the app
@@ -64,6 +67,8 @@ Future<OnboardingStep> resumeStep(
   if (step == OnboardingStep.welcome) return step;
   final fromSettings = await progress.wentToSettings();
   if (fromSettings) await progress.setWentToSettings(false);
+  // Onboarding's done: whatever access is now, the calendar shows what it has.
+  if (step == OnboardingStep.calendar) return step;
   // Still choosing: access set before onboarding shouldn't choose for them.
   if (step == OnboardingStep.findMeals && !fromSettings) return step;
   // Past the choice, or just back from Settings: their access decides.

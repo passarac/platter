@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'flows/photo_access_flow.dart';
+import 'screens/calendar_screen.dart';
 import 'screens/find_meals_screen.dart';
 import 'screens/scanning_screen.dart';
 import 'screens/welcome_screen.dart';
@@ -12,6 +13,7 @@ import 'services/food_scanner.dart';
 import 'services/onboarding_progress.dart';
 import 'services/photo_library.dart';
 import 'theme/platter_theme.dart';
+import 'widgets/coming_soon.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,10 +76,10 @@ class _PlatterAppState extends State<PlatterApp> {
     progress: widget.progress,
     onScan: (context) {
       final scanner = widget.scanner;
-      if (scanner == null) return _comingSoon(context, 'Scanning for meals');
+      if (scanner == null) return comingSoon(context, 'Scanning for meals');
       Navigator.of(context).push(_scanning(scanner));
     },
-    onEmptyCalendar: (context) => _comingSoon(context, 'The calendar'),
+    onEmptyCalendar: _openCalendar,
   );
 
   @override
@@ -128,15 +130,27 @@ class _PlatterAppState extends State<PlatterApp> {
     (context) => ScanningScreen(
       scanner: scanner,
       library: widget.photos,
-      onSeeCalendar: () => _comingSoon(context, 'The calendar'),
-      onEmptyCalendar: () => _comingSoon(context, 'The calendar'),
+      onSeeCalendar: () => _openCalendar(context),
+      onEmptyCalendar: () => _openCalendar(context),
     ),
   );
+
+  Route<void> _calendar() => onboardingRoute(
+    OnboardingStep.calendar,
+    (context) =>
+        CalendarScreen(scanner: widget.scanner, library: widget.photos),
+  );
+
+  /// Onboarding is over: the calendar takes the place of every screen so
+  /// far, so back can't wander into onboarding again.
+  void _openCalendar(BuildContext context) =>
+      Navigator.of(context).pushAndRemoveUntil(_calendar(), (_) => false);
 
   /// The screens up to [PlatterApp.resumeAt], so back still walks through
   /// onboarding after a relaunch.
   List<Route<void>> _initialRoutes(String _) {
     final resumeAt = widget.resumeAt;
+    if (resumeAt == OnboardingStep.calendar) return [_calendar()];
     final next = switch (resumeAt) {
       OnboardingStep.selectedPhotos => _photoAccess.routeFor(
         PhotoAccess.limited,
@@ -162,12 +176,6 @@ class _PlatterAppState extends State<PlatterApp> {
       onGenerateInitialRoutes: _initialRoutes,
       onGenerateRoute: (_) => _welcome(),
     );
-  }
-
-  static void _comingSoon(BuildContext context, String what) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text('$what is coming soon.')));
   }
 }
 
