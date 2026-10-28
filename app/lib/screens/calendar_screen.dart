@@ -74,7 +74,13 @@ class _CalendarScreenState extends State<CalendarScreen>
   /// The chosen day was tapped, so its cell gives a little bounce.
   bool _selectedByTap = false;
 
+  /// Small renders for the grids, and larger ones for the day view's
+  /// cards, which would blur the small ones.
   final Thumbs _thumbs = {};
+  final Thumbs _photos = {};
+
+  static const _thumbSize = 240;
+  static const _photoSize = 900;
 
   StreamSubscription<ScanProgress>? _updates;
   int? _knownMeals;
@@ -200,23 +206,36 @@ class _CalendarScreenState extends State<CalendarScreen>
       ],
       CalendarView.day => [_cursor],
     };
+    final large = _view == CalendarView.day;
     for (final day in days) {
       for (final meal in meals.on(day)) {
-        if (!_thumbs.containsKey(meal.id)) unawaited(_loadThumb(meal.id));
+        if (!_thumbs.containsKey(meal.id)) {
+          unawaited(_loadThumb(meal.id, _thumbs, _thumbSize));
+        }
+        if (large && !_photos.containsKey(meal.id)) {
+          unawaited(_loadThumb(meal.id, _photos, _photoSize));
+        }
       }
     }
   }
 
-  Future<void> _loadThumb(String id) async {
-    _thumbs[id] = null;
+  Future<void> _loadThumb(String id, Thumbs into, int size) async {
+    into[id] = null;
     Uint8List? bytes;
     try {
-      bytes = await widget.library.thumbnail(id);
+      bytes = await widget.library.thumbnail(id, size: size);
     } catch (_) {
       // A photo that's gone keeps its empty cell.
     }
-    if (bytes != null && mounted) setState(() => _thumbs[id] = bytes);
+    if (bytes != null && mounted) setState(() => into[id] = bytes);
   }
+
+  /// The day view's photos: the large render, or the small one until it
+  /// arrives.
+  Thumbs _dayPhotos(MealCalendar meals) => {
+    for (final meal in meals.on(_cursor))
+      meal.id: _photos[meal.id] ?? _thumbs[meal.id],
+  };
 
   void _report(Object error, StackTrace stack, String context) {
     FlutterError.reportError(
@@ -504,7 +523,11 @@ class _CalendarScreenState extends State<CalendarScreen>
         thumbs: _thumbs,
         onOpenDay: (day) => _zoomTo(CalendarView.day, at: day),
       ),
-      CalendarView.day => DayView(day: _cursor, meals: meals, thumbs: _thumbs),
+      CalendarView.day => DayView(
+        day: _cursor,
+        meals: meals,
+        thumbs: _dayPhotos(meals),
+      ),
     };
     return _Arrival(key: ValueKey(_pageKey), entrance: _entrance, child: page);
   }

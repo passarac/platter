@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:photo_manager/photo_manager.dart';
@@ -34,8 +35,8 @@ abstract interface class PhotoLibrary {
   /// Square thumbnails of the newest visible photos, at most [count].
   Future<List<Uint8List>> recentThumbnails(int count);
 
-  /// A square thumbnail of the photo with this [id], or null if Platter
-  /// can't see it (any more).
+  /// A square thumbnail of the photo with this [id], [size] pixels across,
+  /// or null if Platter can't see it (any more).
   Future<Uint8List?> thumbnail(String id, {int size = 200});
 
   Future<void> openSettings();
@@ -90,7 +91,19 @@ class DevicePhotoLibrary implements PhotoLibrary {
   @override
   Future<Uint8List?> thumbnail(String id, {int size = 200}) async {
     final asset = await AssetEntity.fromId(id);
-    return asset?.thumbnailDataWithSize(ThumbnailSize.square(size));
+    final square = ThumbnailSize.square(size);
+    // Left to its defaults, iOS may hand back a quick, blurry render; ask
+    // for a proper one at exactly this size.
+    return asset?.thumbnailDataWithOption(
+      Platform.isIOS
+          ? ThumbnailOption.ios(
+              size: square,
+              quality: 90,
+              deliveryMode: DeliveryMode.highQualityFormat,
+              resizeMode: ResizeMode.exact,
+            )
+          : ThumbnailOption(size: square, quality: 90),
+    );
   }
 
   @override

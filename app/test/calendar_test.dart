@@ -227,6 +227,20 @@ void main() {
   });
 
   group('Day view', () {
+    testWidgets('asks for larger photos than the grids do', (tester) async {
+      final photos = FakePhotoLibrary(access: PhotoAccess.full);
+      await openCalendar(
+        tester,
+        scanner: FakeFoodScanner(found: october()),
+        photos: photos,
+      );
+      expect(photos.thumbnailSizes.toSet(), {240});
+
+      await tester.tap(find.text('Day'));
+      await tester.pumpAndSettle();
+      expect(photos.thumbnailSizes.toSet(), {240, 900});
+    });
+
     testWidgets('shows the meals by slot and pages a day at a time', (
       tester,
     ) async {
