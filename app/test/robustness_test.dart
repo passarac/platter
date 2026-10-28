@@ -356,6 +356,38 @@ void main() {
         );
         await t.pumpAndSettle();
       },
+      for (final view in ['Week', 'Day', 'Year'])
+        '${view.toLowerCase()} view': (t) async {
+          final now = DateTime.now();
+          final scanner = FakeFoodScanner(
+            found: [
+              for (var ago = 0; ago < 28; ago++)
+                for (final hour in [8, 13, 20, 23].take(ago % 4 + 1))
+                  for (var shot = 0; shot < (ago == 0 ? 3 : 1); shot++)
+                    FoundMeal(
+                      id: '$ago-$hour-$shot',
+                      photos: ['$ago-$hour-$shot'],
+                      taken: DateTime(
+                        now.year,
+                        now.month,
+                        now.day - ago,
+                        hour,
+                        shot * 5,
+                      ),
+                      verdict: MealVerdict.food,
+                    ),
+            ],
+          );
+          await launchAt(
+            t,
+            OnboardingStep.calendar,
+            FakePhotoLibrary(access: PhotoAccess.full),
+            scanner: scanner,
+          );
+          await t.pumpAndSettle();
+          await t.tap(find.text(view));
+          await t.pumpAndSettle();
+        },
     };
     for (final MapEntry(key: device, value: size) in sizes.entries) {
       for (final scale in textScales) {

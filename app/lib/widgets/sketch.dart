@@ -283,7 +283,6 @@ class PillButton extends StatelessWidget {
             Container(
               height: small ? 40 : 44,
               padding: EdgeInsets.symmetric(horizontal: small ? 12 : 14),
-              alignment: Alignment.center,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
