@@ -46,7 +46,6 @@ class MealCalendar {
       final taken = meal.taken;
       if (meal.verdict != MealVerdict.food || taken == null) continue;
       _days.putIfAbsent(dayOf(taken), () => []).add(meal);
-      count++;
     }
     for (final meals in _days.values) {
       meals.sort((a, b) => a.taken!.compareTo(b.taken!));
@@ -56,7 +55,7 @@ class MealCalendar {
   final _days = <DateTime, List<FoundMeal>>{};
 
   /// Meals on the calendar.
-  int count = 0;
+  int get count => _days.values.fold(0, (n, meals) => n + meals.length);
 
   bool get isEmpty => _days.isEmpty;
 
@@ -105,11 +104,12 @@ class MealCalendar {
 
   /// The day to pick when [month] opens: today if it has meals, otherwise
   /// the month's last day with meals, otherwise today in the current month
-  /// and the 1st elsewhere.
+  /// and the 1st elsewhere. Never a day to come: a photo dated ahead (a
+  /// camera's clock can be wrong) can't be paged away from.
   DateTime defaultDay(DateTime month, DateTime today) {
     final thisMonth = monthOf(today) == monthOf(month);
     if (thisMonth && on(today).isNotEmpty) return dayOf(today);
-    final days = daysIn(month);
+    final days = daysIn(month).where((day) => !day.isAfter(today));
     if (days.isNotEmpty) return days.last;
     return thisMonth ? dayOf(today) : monthOf(month);
   }

@@ -17,6 +17,10 @@ class FakeFoodScanner implements FoodScanner {
   /// While set, [start] throws it, like a scan that can't begin.
   Object? startError;
 
+  /// While set, [meals] doesn't return until it completes, with what was
+  /// found when it was asked.
+  Completer<void>? holdMeals;
+
   final _updates = StreamController<ScanProgress>.broadcast();
 
   void emit(ScanProgress progress) {
@@ -52,5 +56,9 @@ class FakeFoodScanner implements FoodScanner {
   Future<void> stop() async {}
 
   @override
-  Future<List<FoundMeal>> meals() async => found;
+  Future<List<FoundMeal>> meals() async {
+    final result = found;
+    await holdMeals?.future;
+    return result;
+  }
 }

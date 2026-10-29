@@ -57,10 +57,6 @@ String formatTime(BuildContext context, DateTime t) =>
 /// Loaded thumbnails by photo id; null while one is still loading.
 typedef Thumbs = Map<String, Uint8List?>;
 
-/// Fixed-size controls can only take so much text growth.
-Widget compactText(Widget child) =>
-    MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: child);
-
 /// A photo filling its box with rounded corners, or the empty-cell colour
 /// until it loads.
 class PhotoBox extends StatelessWidget {

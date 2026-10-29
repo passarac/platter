@@ -204,7 +204,7 @@ class _PressableState extends State<Pressable> {
 }
 
 /// Controls of a fixed height can only take so much text growth.
-Widget _compact(Widget child) =>
+Widget compactText(Widget child) =>
     MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: child);
 
 /// A 44-point square icon button on paper (`.sq-btn`).
@@ -279,7 +279,7 @@ class PillButton extends StatelessWidget {
           fill: blue ? PlatterColors.blue : PlatterColors.paper,
           borderWidth: small ? 2 : 2.5,
           shadow: blue ? 2 : 0,
-          child: _compact(
+          child: compactText(
             Container(
               height: small ? 40 : 44,
               padding: EdgeInsets.symmetric(horizontal: small ? 12 : 14),

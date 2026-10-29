@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -125,6 +126,15 @@ void main() {
         calendar.defaultDay(DateTime(2026, 8), today),
         DateTime(2026, 8, 1),
       );
+      // A photo dated ahead of today can't be the day to open on.
+      final ahead = MealCalendar([
+        meal('ahead', DateTime(2026, 10, 20, 12)),
+        meal('before', DateTime(2026, 10, 5, 12)),
+      ]);
+      expect(
+        ahead.defaultDay(DateTime(2026, 10), today),
+        DateTime(2026, 10, 5),
+      );
       expect(
         MealCalendar(const []).defaultDay(DateTime(2026, 10), today),
         today,
@@ -211,6 +221,62 @@ void main() {
     expect(find.text('September'), findsOneWidget);
   });
 
+  testWidgets('Pages back into the calendar from before its first month', (
+    tester,
+  ) async {
+    await openCalendar(tester, scanner: FakeFoodScanner(found: october()));
+
+    // The year view can open the empty months before the first meal.
+    await tester.tap(find.text('Year'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('January, 0 days with meals'));
+    await tester.pumpAndSettle();
+    expect(find.text('January'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Previous month'));
+    await tester.pumpAndSettle();
+    expect(find.text('January'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Next month'));
+    await tester.pumpAndSettle();
+    expect(find.text('September'), findsOneWidget);
+    expect(find.text('Mon 14 Sep'), findsOneWidget);
+
+    // So can the week that the first month starts in.
+    await tester.tap(find.text('Week'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Previous week'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Previous week'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Monday 31 August, open day'));
+    await tester.pumpAndSettle();
+    expect(find.text('31 August'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Previous day'));
+    await tester.pumpAndSettle();
+    expect(find.text('31 August'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Next day'));
+    await tester.pumpAndSettle();
+    expect(find.text('1 September'), findsOneWidget);
+  });
+
+  testWidgets('Paging a year keeps the day within its month', (tester) async {
+    final leapDay = DateTime(2028, 2, 29);
+    await openCalendar(
+      tester,
+      scanner: FakeFoodScanner(found: [meal('a', DateTime(2027, 1, 10, 12))]),
+      on: leapDay,
+    );
+    await tester.tap(find.text('Today'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Year'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Previous year'));
+    await tester.pumpAndSettle();
+    expect(find.text('2027'), findsOneWidget);
+    await tester.tap(find.text('Day'));
+    await tester.pumpAndSettle();
+    expect(find.text('28 February'), findsOneWidget);
+  });
+
   testWidgets('Today opens today in the day view from anywhere', (
     tester,
   ) async {
@@ -239,6 +305,24 @@ void main() {
       await tester.tap(find.text('Day'));
       await tester.pumpAndSettle();
       expect(photos.thumbnailSizes.toSet(), {240, 900});
+    });
+
+    testWidgets('asks again for photos that didn\'t load', (tester) async {
+      final photos = FakePhotoLibrary(access: PhotoAccess.full);
+      await openCalendar(
+        tester,
+        scanner: FakeFoodScanner(found: october()),
+        photos: photos,
+      );
+      // The month's three meals, none of which loaded.
+      expect(photos.thumbnailSizes, [240, 240, 240]);
+
+      photos.thumbnailBytes = tinyPng;
+      await tester.tap(find.text('Day'));
+      await tester.pumpAndSettle();
+      // Today's two meals, small and large.
+      expect(photos.thumbnailSizes.length, 7);
+      expect(find.byType(Image), findsNWidgets(2));
     });
 
     testWidgets('shows the meals by slot and pages a day at a time', (
@@ -442,6 +526,52 @@ void main() {
     expect(find.text('Your calendar is ready'), findsNothing);
     expect(day('October 17, 2 meals'), findsOneWidget);
     expect(find.text('Dinner'), findsOneWidget);
+  });
+
+  testWidgets('Moves to the first meals to land, wherever they are', (
+    tester,
+  ) async {
+    final scanner = FakeFoodScanner();
+    await openCalendar(tester, scanner: scanner);
+    expect(find.text('October'), findsOneWidget);
+
+    scanner.found = [meal('old', DateTime(2026, 7, 4, 12))];
+    scanner.emit(const ScanProgress(total: 100, checked: 40, meals: 1));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.text('July'), findsOneWidget);
+    expect(find.text('Sat 4 Jul'), findsOneWidget);
+
+    // Later finds leave the user where they are.
+    await tester.tap(find.bySemanticsLabel('Next month'));
+    await tester.pumpAndSettle();
+    scanner.found = [...scanner.found, meal('new', DateTime(2026, 6, 1, 12))];
+    scanner.emit(const ScanProgress(total: 100, checked: 60, meals: 2));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.text('August'), findsOneWidget);
+  });
+
+  testWidgets('Catches a find that came in during the first load', (
+    tester,
+  ) async {
+    final scanner = FakeFoodScanner()..holdMeals = Completer();
+    await openCalendar(tester, scanner: scanner);
+    expect(find.text('Your calendar is ready'), findsNothing);
+
+    // Found while the first load is still on its way back, empty.
+    scanner.found = october();
+    scanner.emit(const ScanProgress(total: 100, checked: 40, meals: 4));
+    await tester.pump();
+    scanner.holdMeals!.complete();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Your calendar is ready'), findsOneWidget);
+
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    expect(find.text('Your calendar is ready'), findsNothing);
+    expect(day('October 17, 2 meals'), findsOneWidget);
   });
 
   testWidgets('Without photo access the scan is left alone', (tester) async {
