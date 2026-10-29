@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' show min;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -88,6 +89,10 @@ class _CalendarScreenState extends State<CalendarScreen>
   Timer? _reloadTimer;
   int _loads = 0;
 
+  /// The scan reported a change while the first load was still fetching,
+  /// which that load may have missed.
+  bool _changedWhileLoading = false;
+
   /// Drives the first reveal; the month it revealed keeps using it.
   late final _reveal = AnimationController(vsync: this);
   DateTime? _revealMonth;
@@ -134,12 +139,20 @@ class _CalendarScreenState extends State<CalendarScreen>
     if (scanner == null) return;
     _updates = scanner.progress.listen((progress) {
       // New meals, or the scan finishing (when the last groupings settle),
-      // mean the calendar may have changed.
+      // mean the calendar may have changed. The first report is the state
+      // the first load fetches anyway.
+      final known = _knownMeals;
       final changed =
-          progress.meals != _knownMeals || (_wasRunning && !progress.running);
+          known != null &&
+          (progress.meals != known || (_wasRunning && !progress.running));
       _knownMeals = progress.meals;
       _wasRunning = progress.running;
-      if (changed && _meals != null) _scheduleReload();
+      if (!changed) return;
+      if (_meals == null) {
+        _changedWhileLoading = true;
+      } else {
+        _scheduleReload();
+      }
     });
     final access = await widget.library.currentAccess();
     if (!mounted) return;
@@ -173,12 +186,18 @@ class _CalendarScreenState extends State<CalendarScreen>
     if (!mounted || load != _loads) return;
     final meals = MealCalendar(found);
     final first = _meals == null;
+    // The first meals to land, now or as the scan finds them, decide where
+    // the calendar opens; there was nowhere worth being before them.
+    final settle = first || (_meals!.isEmpty && !meals.isEmpty);
     setState(() {
       _meals = meals;
-      if (first) _cursor = meals.defaultDay(meals.startMonth(_today), _today);
+      if (settle) _cursor = meals.defaultDay(meals.startMonth(_today), _today);
     });
     _loadThumbs();
-    if (first) _startReveal();
+    if (first) {
+      _startReveal();
+      if (_changedWhileLoading) _scheduleReload();
+    }
   }
 
   void _startReveal() {
@@ -207,6 +226,13 @@ class _CalendarScreenState extends State<CalendarScreen>
       CalendarView.day => [_cursor],
     };
     final large = _view == CalendarView.day;
+    // The large renders are only kept for the day on show; they'd mount up
+    // over a long stay on the calendar otherwise.
+    final onShow = {
+      if (large)
+        for (final meal in meals.on(_cursor)) meal.id,
+    };
+    _photos.removeWhere((id, _) => !onShow.contains(id));
     for (final day in days) {
       for (final meal in meals.on(day)) {
         if (!_thumbs.containsKey(meal.id)) {
@@ -225,9 +251,17 @@ class _CalendarScreenState extends State<CalendarScreen>
     try {
       bytes = await widget.library.thumbnail(id, size: size);
     } catch (_) {
-      // A photo that's gone keeps its empty cell.
+      // Handled below, like a photo that's gone.
     }
-    if (bytes != null && mounted) setState(() => into[id] = bytes);
+    // No longer wanted meanwhile.
+    if (!mounted || !into.containsKey(id)) return;
+    if (bytes == null) {
+      // The cell stays empty, but the next look at this view tries again:
+      // the photo may be back (online again, say).
+      into.remove(id);
+      return;
+    }
+    setState(() => into[id] = bytes);
   }
 
   /// The day view's photos: the large render, or the small one until it
@@ -256,30 +290,37 @@ class _CalendarScreenState extends State<CalendarScreen>
       : day;
 
   /// Where the cursor lands one page back or forward in the current view,
-  /// or null at the edge of the calendar.
+  /// or null at the edge of the calendar. A page outside the calendar (the
+  /// year view can open the empty months before the first meal) pages back
+  /// into it rather than nowhere.
   DateTime? _target(int direction) {
-    switch (_view) {
-      case CalendarView.year:
-        final year = _cursor.year + direction;
-        if (year < _firstMonth.year || year > _today.year) return null;
-        return _clamp(DateTime(year, _cursor.month, _cursor.day));
-      case CalendarView.month:
-        final month = DateTime(_cursor.year, _cursor.month + direction);
-        if (month.isBefore(_firstMonth) || month.isAfter(_lastMonth)) {
-          return null;
-        }
-        return _meals?.defaultDay(month, _today) ?? month;
-      case CalendarView.week:
-        final monday = addDays(mondayOf(_cursor), 7 * direction);
-        if (monday.isAfter(mondayOf(_today))) return null;
-        if (addDays(monday, 6).isBefore(_firstMonth)) return null;
-        return _clamp(addDays(_cursor, 7 * direction));
-      case CalendarView.day:
-        final day = addDays(_cursor, direction);
-        if (day.isBefore(_firstMonth) || day.isAfter(_today)) return null;
-        return day;
-    }
+    final cursor = _cursor;
+    final next = switch (_view) {
+      CalendarView.year => () {
+        final year = cursor.year + direction;
+        final days = DateUtils.getDaysInMonth(year, cursor.month);
+        return DateTime(year, cursor.month, min(cursor.day, days));
+      }(),
+      CalendarView.month => DateTime(cursor.year, cursor.month + direction),
+      CalendarView.week => addDays(cursor, 7 * direction),
+      CalendarView.day => addDays(cursor, direction),
+    };
+    // Nothing past today, or before the first month, that way.
+    final (start, end) = _pageSpan(next);
+    if (direction > 0 && start.isAfter(_today)) return null;
+    if (direction < 0 && end.isBefore(_firstMonth)) return null;
+    final target = _clamp(next);
+    if (_view != CalendarView.month) return target;
+    return _meals?.defaultDay(target, _today) ?? monthOf(target);
   }
+
+  /// The first and last day of the page [day] is on in the current view.
+  (DateTime, DateTime) _pageSpan(DateTime day) => switch (_view) {
+    CalendarView.year => (DateTime(day.year), DateTime(day.year, 12, 31)),
+    CalendarView.month => (monthOf(day), DateTime(day.year, day.month + 1, 0)),
+    CalendarView.week => (mondayOf(day), addDays(mondayOf(day), 6)),
+    CalendarView.day => (day, day),
+  };
 
   void _step(int direction) {
     final target = _target(direction);
