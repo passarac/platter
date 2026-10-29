@@ -1,12 +1,9 @@
-import 'dart:async';
 import 'dart:math' show min;
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../services/food_scanner.dart';
 import '../services/meal_calendar.dart';
-import '../services/photo_library.dart';
+import '../services/meal_store.dart';
 import '../theme/platter_theme.dart';
 import '../widgets/coming_soon.dart';
 import '../widgets/crayon.dart';
@@ -33,35 +30,27 @@ enum CalendarView {
 /// week or day, with one header and zoom bar over all four. The month
 /// comes first, and its days pop in one by one the first time.
 ///
-/// The scan carries on while this screen is up (and is started again on
-/// relaunch, in case it was cut short), so new meals land on their days as
-/// they're found.
+/// New meals land on their days as the [store] hears of them.
 class CalendarScreen extends StatefulWidget {
-  const CalendarScreen({
-    super.key,
-    required this.scanner,
-    required this.library,
-    this.today,
-  });
+  const CalendarScreen({super.key, required this.store, this.today});
 
-  /// Where the meals come from. Without a scanner the calendar is empty.
-  final FoodScanner? scanner;
-  final PhotoLibrary library;
+  /// Where the meals and their thumbnails come from.
+  final MealStore store;
 
   /// Today's date, for tests; by default the clock's.
   final DateTime? today;
 
   @override
-  State<CalendarScreen> createState() => _CalendarScreenState();
+  State<CalendarScreen> createState() => CalendarScreenState();
 }
 
 /// How the next page arrives (the mockup's `slideNext`, `slidePrev`,
 /// `zoomIn`, `zoomOut` and `viewIn`).
 enum _Entrance { fade, slideNext, slidePrev, zoomIn, zoomOut }
 
-class _CalendarScreenState extends State<CalendarScreen>
+class CalendarScreenState extends State<CalendarScreen>
     with SingleTickerProviderStateMixin {
-  /// Null until the first load is in.
+  /// The meals last taken from the store; null until its first load is in.
   MealCalendar? _meals;
 
   CalendarView _view = CalendarView.month;
@@ -77,21 +66,8 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   /// Small renders for the grids, and larger ones for the day view's
   /// cards, which would blur the small ones.
-  final Thumbs _thumbs = {};
-  final Thumbs _photos = {};
-
   static const _thumbSize = 240;
   static const _photoSize = 900;
-
-  StreamSubscription<ScanProgress>? _updates;
-  int? _knownMeals;
-  bool _wasRunning = false;
-  Timer? _reloadTimer;
-  int _loads = 0;
-
-  /// The scan reported a change while the first load was still fetching,
-  /// which that load may have missed.
-  bool _changedWhileLoading = false;
 
   /// Drives the first reveal; the month it revealed keeps using it.
   late final _reveal = AnimationController(vsync: this);
@@ -118,73 +94,38 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void initState() {
     super.initState();
-    // After the first frame, so a load that completes at once (no scanner)
-    // still finds the screen in the tree when it starts the reveal.
+    widget.store.addListener(_onStore);
+    // After the first frame, so meals the store already has still find the
+    // screen in the tree when they start the reveal.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) unawaited(_load());
+      if (mounted) _onStore();
     });
-    unawaited(_watchScan());
+  }
+
+  @override
+  void didUpdateWidget(CalendarScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.store != widget.store) {
+      oldWidget.store.removeListener(_onStore);
+      widget.store.addListener(_onStore);
+    }
   }
 
   @override
   void dispose() {
-    _updates?.cancel();
-    _reloadTimer?.cancel();
+    widget.store.removeListener(_onStore);
     _reveal.dispose();
     super.dispose();
   }
 
-  Future<void> _watchScan() async {
-    final scanner = widget.scanner;
-    if (scanner == null) return;
-    _updates = scanner.progress.listen((progress) {
-      // New meals, or the scan finishing (when the last groupings settle),
-      // mean the calendar may have changed. The first report is the state
-      // the first load fetches anyway.
-      final known = _knownMeals;
-      final changed =
-          known != null &&
-          (progress.meals != known || (_wasRunning && !progress.running));
-      _knownMeals = progress.meals;
-      _wasRunning = progress.running;
-      if (!changed) return;
-      if (_meals == null) {
-        _changedWhileLoading = true;
-      } else {
-        _scheduleReload();
-      }
-    });
-    final access = await widget.library.currentAccess();
-    if (!mounted) return;
-    if (access != PhotoAccess.full && access != PhotoAccess.limited) return;
-    try {
-      await scanner.start();
-    } catch (error, stack) {
-      // The calendar shows what's been found so far.
-      _report(error, stack, 'while starting the food scan');
+  /// The store changed: new meals, or a thumbnail landing.
+  void _onStore() {
+    final meals = widget.store.meals;
+    if (meals == null) return;
+    if (identical(meals, _meals)) {
+      setState(() {});
+      return;
     }
-  }
-
-  /// Progress comes thick and fast mid-scan; one reload a little after the
-  /// last change is plenty.
-  void _scheduleReload() {
-    _reloadTimer?.cancel();
-    _reloadTimer = Timer(const Duration(milliseconds: 400), _load);
-  }
-
-  Future<void> _load() async {
-    final load = ++_loads;
-    var found = const <FoundMeal>[];
-    if (widget.scanner case final scanner?) {
-      try {
-        found = await scanner.meals();
-      } catch (error, stack) {
-        _report(error, stack, 'while loading the meals');
-      }
-    }
-    // A newer load has started since; let it set the state.
-    if (!mounted || load != _loads) return;
-    final meals = MealCalendar(found);
     final first = _meals == null;
     // The first meals to land, now or as the scan finds them, decide where
     // the calendar opens; there was nowhere worth being before them.
@@ -193,11 +134,7 @@ class _CalendarScreenState extends State<CalendarScreen>
       _meals = meals;
       if (settle) _cursor = meals.defaultDay(meals.startMonth(_today), _today);
     });
-    _loadThumbs();
-    if (first) {
-      _startReveal();
-      if (_changedWhileLoading) _scheduleReload();
-    }
+    if (first) _startReveal();
   }
 
   void _startReveal() {
@@ -213,74 +150,25 @@ class _CalendarScreenState extends State<CalendarScreen>
     }
   }
 
-  /// Fetches the thumbnails the current view needs.
-  void _loadThumbs() {
-    final meals = _meals;
-    if (meals == null) return;
-    final days = switch (_view) {
-      CalendarView.year => const <DateTime>[],
-      CalendarView.month => meals.daysIn(_month),
-      CalendarView.week => [
-        for (var i = 0; i < 7; i++) addDays(mondayOf(_cursor), i),
-      ],
-      CalendarView.day => [_cursor],
-    };
-    final large = _view == CalendarView.day;
-    // The large renders are only kept for the day on show; they'd mount up
-    // over a long stay on the calendar otherwise.
-    final onShow = {
-      if (large)
-        for (final meal in meals.on(_cursor)) meal.id,
-    };
-    _photos.removeWhere((id, _) => !onShow.contains(id));
-    for (final day in days) {
-      for (final meal in meals.on(day)) {
-        if (!_thumbs.containsKey(meal.id)) {
-          unawaited(_loadThumb(meal.id, _thumbs, _thumbSize));
-        }
-        if (large && !_photos.containsKey(meal.id)) {
-          unawaited(_loadThumb(meal.id, _photos, _photoSize));
-        }
-      }
-    }
-  }
-
-  Future<void> _loadThumb(String id, Thumbs into, int size) async {
-    into[id] = null;
-    Uint8List? bytes;
-    try {
-      bytes = await widget.library.thumbnail(id, size: size);
-    } catch (_) {
-      // Handled below, like a photo that's gone.
-    }
-    // No longer wanted meanwhile.
-    if (!mounted || !into.containsKey(id)) return;
-    if (bytes == null) {
-      // The cell stays empty, but the next look at this view tries again:
-      // the photo may be back (online again, say).
-      into.remove(id);
-      return;
-    }
-    setState(() => into[id] = bytes);
-  }
+  /// Small renders of the meals on [days], fetched as they're first asked
+  /// for.
+  Thumbs _thumbsOn(Iterable<DateTime> days, MealCalendar meals) => {
+    for (final day in days)
+      for (final meal in meals.on(day))
+        meal.id: widget.store.thumbnail(meal.id, size: _thumbSize),
+  };
 
   /// The day view's photos: the large render, or the small one until it
   /// arrives.
   Thumbs _dayPhotos(MealCalendar meals) => {
     for (final meal in meals.on(_cursor))
-      meal.id: _photos[meal.id] ?? _thumbs[meal.id],
+      meal.id:
+          widget.store.thumbnail(meal.id, size: _photoSize) ??
+          widget.store.thumbnail(meal.id, size: _thumbSize),
   };
 
-  void _report(Object error, StackTrace stack, String context) {
-    FlutterError.reportError(
-      FlutterErrorDetails(
-        exception: error,
-        stack: stack,
-        library: 'platter',
-        context: ErrorDescription(context),
-      ),
-    );
-  }
+  /// Shows [day] in the day view, from wherever the calendar was.
+  void openDay(DateTime day) => _zoomTo(CalendarView.day, at: dayOf(day));
 
   /// Keeps [day] between the first month and today.
   DateTime _clamp(DateTime day) => day.isAfter(_today)
@@ -339,7 +227,6 @@ class _CalendarScreenState extends State<CalendarScreen>
       _entrance = entrance;
       _selectedByTap = false;
     });
-    _loadThumbs();
   }
 
   /// Switches zoom level, growing into a closer view or shrinking back out.
@@ -466,19 +353,15 @@ class _CalendarScreenState extends State<CalendarScreen>
           ),
         ],
       ),
-      bottomNavigationBar: compactText(
-        _TabBar(
-          current: 'Calendar',
-          onOther: (tab) => comingSoon(context, tab),
-        ),
-      ),
     );
   }
 
   Widget _header(BuildContext context) {
     final (eyebrow, title) = _heading;
     final unit = _view.name;
-    return _Paper(
+    return PaperBand(
+      fill: PlatterColors.yellow,
+      edgeAtTop: false,
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -550,7 +433,7 @@ class _CalendarScreenState extends State<CalendarScreen>
         selected: _cursor,
         today: today,
         meals: meals,
-        thumbs: _thumbs,
+        thumbs: _thumbsOn(meals.daysIn(_month), meals),
         reveal: _month == _revealMonth ? _reveal : null,
         revealLength: _revealLength,
         pop: _selectedByTap,
@@ -561,7 +444,9 @@ class _CalendarScreenState extends State<CalendarScreen>
         monday: mondayOf(_cursor),
         today: today,
         meals: meals,
-        thumbs: _thumbs,
+        thumbs: _thumbsOn([
+          for (var i = 0; i < 7; i++) addDays(mondayOf(_cursor), i),
+        ], meals),
         onOpenDay: (day) => _zoomTo(CalendarView.day, at: day),
       ),
       CalendarView.day => DayView(
@@ -612,65 +497,6 @@ class _Arrival extends StatelessWidget {
       child: child,
     );
   }
-}
-
-/// Yellow paper with an ink line along the bottom (`.app-head::before`).
-class _Paper extends StatelessWidget {
-  const _Paper({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      fit: StackFit.passthrough,
-      children: [
-        const Positioned(
-          left: -6,
-          top: -6,
-          right: -6,
-          bottom: 0,
-          child: Crayon(child: CustomPaint(painter: _PaperPainter.header)),
-        ),
-        child,
-      ],
-    );
-  }
-}
-
-/// A filled strip with a single ink edge, top or bottom.
-class _PaperPainter extends CustomPainter {
-  const _PaperPainter({required this.color, required this.edgeAtTop});
-
-  static const header = _PaperPainter(
-    color: PlatterColors.yellow,
-    edgeAtTop: false,
-  );
-  static const tabBar = _PaperPainter(
-    color: PlatterColors.nav,
-    edgeAtTop: true,
-  );
-
-  final Color color;
-  final bool edgeAtTop;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = color);
-    final y = edgeAtTop ? 1.25 : size.height - 1.25;
-    canvas.drawLine(
-      Offset(0, y),
-      Offset(size.width, y),
-      Paint()
-        ..color = PlatterColors.ink
-        ..strokeWidth = 2.5,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_PaperPainter old) =>
-      color != old.color || edgeAtTop != old.edgeAtTop;
 }
 
 /// The page's name, tappable to jump to a date (`.title-btn`). The words
@@ -893,110 +719,6 @@ class _AddMealButton extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// The five tabs along the bottom (`.tabbar`). Only Calendar exists so far.
-class _TabBar extends StatelessWidget {
-  const _TabBar({required this.current, required this.onOther});
-
-  final String current;
-  final ValueChanged<String> onOther;
-
-  static const _tabs = [
-    ('Calendar', CalIcons.tabCalendar),
-    ('Timeline', CalIcons.tabTimeline),
-    ('Map', CalIcons.tabMap),
-    ('Rediscover', CalIcons.tabRediscover),
-    ('Plated', CalIcons.tabPlated),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      fit: StackFit.passthrough,
-      children: [
-        const Positioned(
-          left: -6,
-          top: 0,
-          right: -6,
-          bottom: -6,
-          child: Crayon(child: CustomPaint(painter: _PaperPainter.tabBar)),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
-            child: Row(
-              children: [
-                for (final (name, icon) in _tabs)
-                  Expanded(
-                    child: _Tab(
-                      name: name,
-                      icon: icon,
-                      selected: name == current,
-                      onTap: name == current ? null : () => onOther(name),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Tab extends StatelessWidget {
-  const _Tab({
-    required this.name,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String name;
-  final String icon;
-  final bool selected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? PlatterColors.blue : PlatterColors.ink3;
-    return Semantics(
-      button: true,
-      selected: selected,
-      label: name,
-      child: ExcludeSemantics(
-        child: GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: onTap,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 48),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Crayon(child: calIcon(icon, 24, color: color)),
-                const SizedBox(height: 2),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    name,
-                    style: PlatterText.body(
-                      size: 12,
-                      weight: FontWeight.w800,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
         ),
       ),

@@ -3,8 +3,12 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import '../../services/food_scanner.dart';
+import '../../services/meal_calendar.dart';
 import '../../theme/platter_theme.dart';
+import '../../widgets/coming_soon.dart';
 import '../../widgets/crayon.dart';
+import '../../widgets/sketch.dart';
 
 /// Words, icons and small pieces the calendar views share.
 
@@ -174,25 +178,97 @@ abstract final class CalIcons {
       '1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 '
       '1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 '
       '1.65 0 0 0-1.51 1z"/></svg>';
-  static const tabCalendar =
-      '<svg viewBox="0 0 24 24" $_stroke stroke-width="2.4">'
-      '<rect x="3" y="5" width="18" height="16" rx="3"/>'
-      '<path d="M3 10h18M8 3v4M16 3v4"/></svg>';
-  static const tabTimeline =
-      '<svg viewBox="0 0 24 24" $_stroke stroke-width="2.4">'
-      '<rect x="4" y="3" width="16" height="7" rx="2"/>'
-      '<rect x="4" y="12" width="16" height="4" rx="1.5"/>'
-      '<rect x="4" y="18" width="16" height="3" rx="1.5"/></svg>';
-  static const tabMap =
-      '<svg viewBox="0 0 24 24" $_stroke stroke-width="2.4">'
-      '<path d="M9 4l-6 2v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>';
-  static const tabRediscover =
-      '<svg viewBox="0 0 24 24" $_stroke stroke-width="2.4">'
-      '<path d="M4 7h3l10 10h3M4 17h3l3-3M14 10l3-3h3M18 4l2 3-2 3M18 14l2 '
-      '3-2 3"/></svg>';
-  static const tabPlated =
-      '<svg viewBox="0 0 24 24" $_stroke stroke-width="2.4">'
-      '<circle cx="12" cy="12" r="9"/>'
-      '<path d="M12 7.6l1.3 2.7 2.9.4-2.1 2 .5 2.9-2.6-1.4-2.6 1.4.5-2.9-2.1-2 '
-      '2.9-.4z"/></svg>';
+}
+
+/// A meal's photo with when it was taken and how many shots there are
+/// (`.mcard`, `.mcard.wide`).
+class MealCard extends StatelessWidget {
+  const MealCard({
+    super.key,
+    required this.meal,
+    required this.thumb,
+    required this.wide,
+  });
+
+  final FoundMeal meal;
+  final Uint8List? thumb;
+  final bool wide;
+
+  @override
+  Widget build(BuildContext context) {
+    final time = formatTime(context, meal.taken!);
+    final shots = plural(meal.photos.length, 'photo');
+    return Semantics(
+      button: true,
+      label: '${MealSlot.of(meal.taken!).label} at $time, $shots, open details',
+      child: ExcludeSemantics(
+        child: Pressable(
+          onTap: () => comingSoon(context, 'Meal details'),
+          child: SketchBox(
+            fill: Colors.white,
+            radius: wide ? 18 : 16,
+            shadow: wide ? 4 : 0,
+            child: Padding(
+              padding: EdgeInsets.all(wide ? 5 : 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: wide ? 148 : 100,
+                    width: double.infinity,
+                    child: PhotoBox(bytes: thumb, radius: wide ? 13 : 12),
+                  ),
+                  if (wide)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(7, 7, 7, 4),
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.end,
+                        spacing: 8,
+                        children: [
+                          Text(time, style: PlatterText.head(size: 17)),
+                          Text(
+                            shots,
+                            style: PlatterText.body(
+                              size: 13,
+                              color: PlatterColors.ink3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(5, 6, 5, 3),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            time,
+                            style: PlatterText.body(
+                              size: 14,
+                              weight: FontWeight.w800,
+                              color: PlatterColors.ink,
+                            ).copyWith(height: 1.2),
+                          ),
+                          Text(
+                            shots,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: PlatterText.body(
+                              size: 12,
+                              color: PlatterColors.ink3,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

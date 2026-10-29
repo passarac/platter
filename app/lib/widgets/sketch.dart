@@ -311,3 +311,68 @@ class PillButton extends StatelessWidget {
     );
   }
 }
+
+/// A strip of coloured paper with one ink line along its top or bottom edge
+/// (`.app-head::before`, `.tabbar::before`). It bleeds past the sides and
+/// the far edge so the crayon wobble isn't clipped at the screen's edges.
+class PaperBand extends StatelessWidget {
+  const PaperBand({
+    super.key,
+    required this.fill,
+    required this.edgeAtTop,
+    required this.child,
+  });
+
+  final Color fill;
+
+  /// Whether the ink line runs along the top (a bar at the bottom of the
+  /// screen) rather than the bottom (a header).
+  final bool edgeAtTop;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      fit: StackFit.passthrough,
+      children: [
+        Positioned(
+          left: -6,
+          right: -6,
+          top: edgeAtTop ? 0 : -6,
+          bottom: edgeAtTop ? -6 : 0,
+          child: Crayon(
+            child: CustomPaint(
+              painter: _PaperBandPainter(fill: fill, edgeAtTop: edgeAtTop),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+}
+
+class _PaperBandPainter extends CustomPainter {
+  const _PaperBandPainter({required this.fill, required this.edgeAtTop});
+
+  final Color fill;
+  final bool edgeAtTop;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(Offset.zero & size, Paint()..color = fill);
+    final y = edgeAtTop ? 1.25 : size.height - 1.25;
+    canvas.drawLine(
+      Offset(0, y),
+      Offset(size.width, y),
+      Paint()
+        ..color = PlatterColors.ink
+        ..strokeWidth = 2.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_PaperBandPainter old) =>
+      fill != old.fill || edgeAtTop != old.edgeAtTop;
+}
