@@ -405,6 +405,7 @@ class _TimelineScreenState extends State<TimelineScreen>
           child: compactText(
             _Rail(
               months: _months,
+              thisYear: _today.year,
               current: _current,
               fraction: _fraction,
               onSeek: _seek,
@@ -434,7 +435,7 @@ class _TimelineScreenState extends State<TimelineScreen>
         thumbs: _thumbsFor(item.meals),
         onOpen: () => widget.onOpenDay(item.day),
       ),
-      _EndCard() => _EndRow(first: item.first),
+      _EndCard() => _EndRow(first: item.first, thisYear: today.year),
     };
     if (_entering && row < _entranceRows) {
       // The heading rises first, then the days one after another.
@@ -867,9 +868,10 @@ class _Photo extends StatelessWidget {
 
 /// The card after the oldest day (`.tl-end`).
 class _EndRow extends StatelessWidget {
-  const _EndRow({required this.first});
+  const _EndRow({required this.first, required this.thisYear});
 
   final DateTime first;
+  final int thisYear;
 
   @override
   Widget build(BuildContext context) {
@@ -893,7 +895,8 @@ class _EndRow extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Your first photographed meal: ${longDate(first)}.',
+                'Your first photographed meal: ${longDate(first)}'
+                '${first.year == thisYear ? '' : ' ${first.year}'}.',
                 textAlign: TextAlign.center,
                 style: PlatterText.body(
                   size: 14,
@@ -914,6 +917,7 @@ class _EndRow extends StatelessWidget {
 class _Rail extends StatefulWidget {
   const _Rail({
     required this.months,
+    required this.thisYear,
     required this.current,
     required this.fraction,
     required this.onSeek,
@@ -922,6 +926,9 @@ class _Rail extends StatefulWidget {
 
   /// Newest first.
   final List<DateTime> months;
+
+  /// Months in other years are named with their year.
+  final int thisYear;
   final int current;
   final double fraction;
   final ValueChanged<double> onSeek;
@@ -1064,7 +1071,10 @@ class _RailState extends State<_Rail> {
                           ],
                         ),
                         child: Text(
-                          monthNames[month.month - 1],
+                          monthNames[month.month - 1] +
+                              (month.year == widget.thisYear
+                                  ? ''
+                                  : ' ${month.year}'),
                           maxLines: 1,
                           style: PlatterText.head(
                             size: 16,

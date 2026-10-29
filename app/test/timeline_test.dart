@@ -78,6 +78,23 @@ void main() {
       find.text('Your first photographed meal: Monday 14 September.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('Names the year of meals from other years', (tester) async {
+    await openTimeline(
+      tester,
+      scanner: FakeFoodScanner(
+        found: [...october(), meal('old', DateTime(2011, 3, 13, 12))],
+      ),
+    );
+    expect(find.text('5 meals · since Mar 2011'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Jump to March 2011'));
+    await tester.pumpAndSettle();
+    expect(find.text('March 2011'), findsWidgets);
+    expect(
+      find.text('Your first photographed meal: Sunday 13 March 2011.'),
+      findsOneWidget,
+    );
     // The maybe stays off.
     expect(find.text('Sat 10 Oct'), findsNothing);
   });
