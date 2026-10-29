@@ -17,9 +17,11 @@ final class PhotoLibrarySource: PhotoSource {
     options.sortDescriptors = [
       NSSortDescriptor(key: "creationDate", ascending: false)
     ]
-    // Screenshots are never a meal someone ate.
+    // Screenshots are never a meal someone ate. Only this form of the test
+    // (the one Apple's examples use) works: `(mediaSubtypes & n) == 0`
+    // matches almost nothing on iOS 26, which left the scan one photo.
     options.predicate = NSPredicate(
-      format: "(mediaSubtypes & %d) == 0",
+      format: "NOT ((mediaSubtypes & %d) != 0)",
       PHAssetMediaSubtype.photoScreenshot.rawValue)
     let found = PHAsset.fetchAssets(with: .image, options: options)
 
