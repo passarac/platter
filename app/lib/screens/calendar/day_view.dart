@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 
 import '../../services/food_scanner.dart';
@@ -120,15 +118,11 @@ class _SlotSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           if (hero != null) ...[
-            _MealCard(meal: hero, thumb: thumbs[hero.id], wide: true),
+            MealCard(meal: hero, thumb: thumbs[hero.id], wide: true),
             const SizedBox(height: 8),
           ],
           if (rest.length == 1 && hero == null)
-            _MealCard(
-              meal: rest.first,
-              thumb: thumbs[rest.first.id],
-              wide: true,
-            )
+            MealCard(meal: rest.first, thumb: thumbs[rest.first.id], wide: true)
           else
             for (var i = 0; i < rest.length; i += 2)
               Padding(
@@ -137,7 +131,7 @@ class _SlotSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _MealCard(
+                      child: MealCard(
                         meal: rest[i],
                         thumb: thumbs[rest[i].id],
                         wide: false,
@@ -146,7 +140,7 @@ class _SlotSection extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: i + 1 < rest.length
-                          ? _MealCard(
+                          ? MealCard(
                               meal: rest[i + 1],
                               thumb: thumbs[rest[i + 1].id],
                               wide: false,
@@ -157,98 +151,6 @@ class _SlotSection extends StatelessWidget {
                 ),
               ),
         ],
-      ),
-    );
-  }
-}
-
-/// A meal's photo with when it was taken and how many shots there are
-/// (`.mcard`, `.mcard.wide`).
-class _MealCard extends StatelessWidget {
-  const _MealCard({
-    required this.meal,
-    required this.thumb,
-    required this.wide,
-  });
-
-  final FoundMeal meal;
-  final Uint8List? thumb;
-  final bool wide;
-
-  @override
-  Widget build(BuildContext context) {
-    final time = formatTime(context, meal.taken!);
-    final shots = plural(meal.photos.length, 'photo');
-    return Semantics(
-      button: true,
-      label: '${MealSlot.of(meal.taken!).label} at $time, $shots, open details',
-      child: ExcludeSemantics(
-        child: Pressable(
-          onTap: () => comingSoon(context, 'Meal details'),
-          child: SketchBox(
-            fill: Colors.white,
-            radius: wide ? 18 : 16,
-            shadow: wide ? 4 : 0,
-            child: Padding(
-              padding: EdgeInsets.all(wide ? 5 : 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    height: wide ? 148 : 100,
-                    width: double.infinity,
-                    child: PhotoBox(bytes: thumb, radius: wide ? 13 : 12),
-                  ),
-                  if (wide)
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(7, 7, 7, 4),
-                      child: Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        crossAxisAlignment: WrapCrossAlignment.end,
-                        spacing: 8,
-                        children: [
-                          Text(time, style: PlatterText.head(size: 17)),
-                          Text(
-                            shots,
-                            style: PlatterText.body(
-                              size: 13,
-                              color: PlatterColors.ink3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(5, 6, 5, 3),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            time,
-                            style: PlatterText.body(
-                              size: 14,
-                              weight: FontWeight.w800,
-                              color: PlatterColors.ink,
-                            ).copyWith(height: 1.2),
-                          ),
-                          Text(
-                            shots,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: PlatterText.body(
-                              size: 12,
-                              color: PlatterColors.ink3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

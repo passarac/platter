@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:platter/main.dart';
-import 'package:platter/screens/calendar_screen.dart';
+import 'package:platter/screens/home_screen.dart';
 import 'package:platter/services/food_scanner.dart';
 import 'package:platter/services/meal_calendar.dart';
 import 'package:platter/services/onboarding_progress.dart';
@@ -61,7 +61,7 @@ Future<void> openCalendar(
   useIPhoneSize(tester);
   await tester.pumpWidget(
     MaterialApp(
-      home: CalendarScreen(
+      home: HomeScreen(
         scanner: scanner,
         library: photos ?? FakePhotoLibrary(access: PhotoAccess.full),
         today: on ?? today,

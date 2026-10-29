@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'flows/photo_access_flow.dart';
-import 'screens/calendar_screen.dart';
 import 'screens/find_meals_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/scanning_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'services/food_scanner.dart';
@@ -137,12 +137,12 @@ class _PlatterAppState extends State<PlatterApp> {
 
   Route<void> _calendar() => onboardingRoute(
     OnboardingStep.calendar,
-    (context) =>
-        CalendarScreen(scanner: widget.scanner, library: widget.photos),
+    (context) => HomeScreen(scanner: widget.scanner, library: widget.photos),
   );
 
-  /// Onboarding is over: the calendar takes the place of every screen so
-  /// far, so back can't wander into onboarding again.
+  /// Onboarding is over: the app proper, opening on the calendar, takes the
+  /// place of every screen so far, so back can't wander into onboarding
+  /// again.
   void _openCalendar(BuildContext context) =>
       Navigator.of(context).pushAndRemoveUntil(_calendar(), (_) => false);
 

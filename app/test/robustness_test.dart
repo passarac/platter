@@ -356,6 +356,51 @@ void main() {
         );
         await t.pumpAndSettle();
       },
+      for (final size in ['grid', 'large'])
+        'timeline $size': (t) async {
+          final now = DateTime.now();
+          final scanner = FakeFoodScanner(
+            found: [
+              for (var ago = 0; ago < 70; ago++)
+                for (final hour in [8, 13, 20, 23].take(ago % 4 + 1))
+                  FoundMeal(
+                    id: '$ago-$hour',
+                    photos: ['$ago-$hour'],
+                    taken: DateTime(now.year, now.month, now.day - ago, hour),
+                    verdict: MealVerdict.food,
+                  ),
+            ],
+          );
+          await launchAt(
+            t,
+            OnboardingStep.calendar,
+            FakePhotoLibrary(access: PhotoAccess.full),
+            scanner: scanner,
+          );
+          await t.pumpAndSettle();
+          await t.tap(find.text('Timeline'));
+          await t.pumpAndSettle();
+          if (size == 'large') {
+            await t.tap(find.bySemanticsLabel('Large photos, one per row'));
+            await t.pumpAndSettle();
+          }
+          // Down to the end, past every month's heading.
+          await t.drag(
+            find.bySemanticsLabel('Scroll through months'),
+            const Offset(0, 600),
+          );
+          await t.pumpAndSettle();
+        },
+      'empty timeline': (t) async {
+        await launchAt(
+          t,
+          OnboardingStep.calendar,
+          FakePhotoLibrary(access: PhotoAccess.none),
+        );
+        await t.pumpAndSettle();
+        await t.tap(find.text('Timeline'));
+        await t.pumpAndSettle();
+      },
       for (final view in ['Week', 'Day', 'Year'])
         '${view.toLowerCase()} view': (t) async {
           final now = DateTime.now();

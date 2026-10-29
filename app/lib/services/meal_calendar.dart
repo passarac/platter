@@ -68,6 +68,9 @@ class MealCalendar {
   /// Days with at least one meal.
   int get daysWithMeals => _days.length;
 
+  /// Every day with a meal, earliest first.
+  List<DateTime> get days => _days.keys.toList()..sort();
+
   /// The meals on [day], earliest first.
   List<FoundMeal> on(DateTime day) => _days[dayOf(day)] ?? const [];
 
