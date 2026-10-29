@@ -320,9 +320,18 @@ void main() {
       photos.thumbnailBytes = tinyPng;
       await tester.tap(find.text('Day'));
       await tester.pumpAndSettle();
-      // Today's two meals, small and large.
-      expect(photos.thumbnailSizes.length, 7);
+      // Today's two meals, large; the small ones aren't asked for again
+      // straight away.
+      expect(photos.thumbnailSizes.length, 5);
       expect(find.byType(Image), findsNWidgets(2));
+
+      // A while later, they are.
+      await tester.pump(const Duration(seconds: 31));
+      await tester.tap(find.text('Month'));
+      await tester.pumpAndSettle();
+      expect(photos.thumbnailSizes.length, 8);
+      // Two cells in the grid, two tiles in the day's card.
+      expect(find.byType(Image), findsNWidgets(4));
     });
 
     testWidgets('shows the meals by slot and pages a day at a time', (

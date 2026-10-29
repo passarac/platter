@@ -42,6 +42,14 @@ class MealStore extends ChangeNotifier {
   /// How many renders of each size to keep. Larger ones are kept fewer.
   static int _capFor(int size) => size >= 600 ? 60 : 600;
 
+  /// How long a photo that couldn't be fetched is left alone before an ask
+  /// tries again (it may be back online by then), rather than every rebuild.
+  static const _retryAfter = Duration(seconds: 30);
+  final _retries = <Timer>{};
+
+  /// Thumbnails land one by one; listeners hear once per frame or so.
+  Timer? _notify;
+
   bool _disposed = false;
 
   Future<void> start() async {
@@ -84,6 +92,10 @@ class MealStore extends ChangeNotifier {
     _disposed = true;
     _updates?.cancel();
     _reloadTimer?.cancel();
+    _notify?.cancel();
+    for (final retry in _retries) {
+      retry.cancel();
+    }
     super.dispose();
   }
 
@@ -114,8 +126,8 @@ class MealStore extends ChangeNotifier {
 
   /// The render of photo [id] at [size] pixels across, or null while it's
   /// fetched: asking for one that isn't cached starts the fetch, and
-  /// listeners hear when it lands. A fetch that fails leaves nothing behind,
-  /// so the next ask tries again (the photo may be back online, say).
+  /// listeners hear when it lands. After a fetch fails, asks get null for
+  /// a while, then one tries again (the photo may be back online, say).
   Uint8List? thumbnail(String id, {required int size}) {
     final cache = _thumbs.putIfAbsent(size, LinkedHashMap.new);
     if (cache.containsKey(id)) {
@@ -151,11 +163,19 @@ class MealStore extends ChangeNotifier {
     // Dropped from the cache meanwhile, or the store's gone.
     if (_disposed || !cache.containsKey(id)) return;
     if (bytes == null) {
-      cache.remove(id);
+      late final Timer retry;
+      retry = Timer(_retryAfter, () {
+        _retries.remove(retry);
+        if (cache.containsKey(id) && cache[id] == null) cache.remove(id);
+      });
+      _retries.add(retry);
       return;
     }
     cache[id] = bytes;
-    notifyListeners();
+    _notify ??= Timer(const Duration(milliseconds: 16), () {
+      _notify = null;
+      if (!_disposed) notifyListeners();
+    });
   }
 
   void _report(Object error, StackTrace stack, String context) {

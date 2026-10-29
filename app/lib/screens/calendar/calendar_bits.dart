@@ -30,6 +30,11 @@ const monthNames = [
 /// "Oct".
 String shortMonth(int month) => monthNames[month - 1].substring(0, 3);
 
+/// "October 2026", or just "October" when the year is [unless].
+String monthYear(DateTime month, {int? unless}) =>
+    '${monthNames[month.month - 1]}'
+    '${month.year == unless ? '' : ' ${month.year}'}';
+
 const weekdayShort = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const weekdayLong = [
   'Monday',
