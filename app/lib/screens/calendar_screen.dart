@@ -168,7 +168,14 @@ class CalendarScreenState extends State<CalendarScreen>
   };
 
   /// Shows [day] in the day view, from wherever the calendar was.
-  void openDay(DateTime day) => _zoomTo(CalendarView.day, at: dayOf(day));
+  void openDay(DateTime day) {
+    final target = _clamp(dayOf(day));
+    if (_view == CalendarView.day) {
+      if (target != _cursor) _show(_view, target, _Entrance.fade);
+    } else {
+      _zoomTo(CalendarView.day, at: target);
+    }
+  }
 
   /// Keeps [day] between the first month and today.
   DateTime _clamp(DateTime day) => day.isAfter(_today)

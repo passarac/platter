@@ -90,7 +90,7 @@ class _Tab extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                selected ? _Pop(child: icon) : icon,
+                _Pop(selected: selected, child: icon),
                 const SizedBox(height: 2),
                 FittedBox(
                   fit: BoxFit.scaleDown,
@@ -112,22 +112,51 @@ class _Tab extends StatelessWidget {
   }
 }
 
-/// The chosen tab's icon hops up and back (`tabPop`), once, as it's chosen.
-class _Pop extends StatelessWidget {
-  const _Pop({required this.child});
+/// The chosen tab's icon hops up and back (`tabPop`) as it's chosen: not
+/// when the bar first appears with it already chosen.
+class _Pop extends StatefulWidget {
+  const _Pop({required this.selected, required this.child});
 
+  final bool selected;
   final Widget child;
 
+  @override
+  State<_Pop> createState() => _PopState();
+}
+
+class _PopState extends State<_Pop> with SingleTickerProviderStateMixin {
   static const _spring = Cubic(0.3, 1.4, 0.5, 1);
+
+  late final _hop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 350),
+    value: 1,
+  );
+  late final _eased = CurvedAnimation(parent: _hop, curve: _spring);
+
+  @override
+  void didUpdateWidget(_Pop oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selected &&
+        !oldWidget.selected &&
+        !MediaQuery.disableAnimationsOf(context)) {
+      _hop.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _eased.dispose();
+    _hop.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (MediaQuery.disableAnimationsOf(context)) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 350),
-      curve: _spring,
-      builder: (context, t, child) {
+    return AnimatedBuilder(
+      animation: _eased,
+      builder: (context, child) {
+        final t = _eased.value;
         // Up to the 40% mark, then back.
         final peak = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
         return Transform.translate(
@@ -135,7 +164,7 @@ class _Pop extends StatelessWidget {
           child: Transform.scale(scale: 1 + 0.12 * peak, child: child),
         );
       },
-      child: child,
+      child: widget.child,
     );
   }
 }

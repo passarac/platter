@@ -170,6 +170,35 @@ void main() {
     await tester.pumpAndSettle();
     expect(monthAtTop(tester), 'August 2026');
     expect(find.text("That's where it all began"), findsOneWidget);
+
+    // Large photos make the days very different heights; a month's heading
+    // still lands at the top.
+    await tester.tap(find.bySemanticsLabel('Large photos, one per row'));
+    await tester.pumpAndSettle();
+    await tester.drag(rail, const Offset(0, -800));
+    await tester.pumpAndSettle();
+    expect(monthAtTop(tester), 'October 2026');
+    await tester.tap(find.bySemanticsLabel('Jump to August 2026'));
+    await tester.pumpAndSettle();
+    expect(monthAtTop(tester), 'August 2026');
+    expect(
+      tester.getTopLeft(find.text('August 2026')).dy,
+      closeTo(list.dy + 18, 1),
+    );
+  });
+
+  testWidgets('A pill for a photo dated ahead opens today', (tester) async {
+    await openTimeline(
+      tester,
+      scanner: FakeFoodScanner(
+        found: [...october(), meal('ahead', DateTime(2026, 11, 2, 12))],
+      ),
+    );
+    await tester.tap(
+      find.bySemanticsLabel('Open Monday 2 November in the calendar'),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('17 October'), findsOneWidget);
   });
 
   testWidgets('With nothing found yet, says so, then fills in', (tester) async {

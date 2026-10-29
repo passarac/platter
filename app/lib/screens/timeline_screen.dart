@@ -88,10 +88,16 @@ class _TimelineScreenState extends State<TimelineScreen>
   /// month is at the top and jump to a heading that's on screen.
   final _built = <int, BuildContext>{};
 
-  /// The month at the top of the list, and how far down the list is.
-  int _current = 0;
-  double _fraction = 0;
+  /// The month at the top of the list, and how far down the list is. Only
+  /// the rail listens, so scrolling doesn't rebuild the list.
+  final _rail = ValueNotifier<(int month, double fraction)>((0, 0));
   bool _syncPending = false;
+
+  int get _current => _rail.value.$1;
+
+  /// Counts seeks and jumps, so one still homing in gives way to a newer
+  /// one rather than pulling the list back.
+  int _scrollRequest = 0;
 
   /// The first days rise in one after another when the list first shows.
   bool _entering = false;
@@ -146,6 +152,7 @@ class _TimelineScreenState extends State<TimelineScreen>
     _enterTimer?.cancel();
     _resize.dispose();
     _scroll.dispose();
+    _rail.dispose();
     super.dispose();
   }
 
@@ -190,7 +197,11 @@ class _TimelineScreenState extends State<TimelineScreen>
     _months = months;
     _items = items;
     _headingRows = headings;
-    _current = _current.clamp(0, months.isEmpty ? 0 : months.length - 1);
+    final (current, fraction) = _rail.value;
+    _rail.value = (
+      current.clamp(0, months.isEmpty ? 0 : months.length - 1),
+      fraction,
+    );
   }
 
   void _enter() {
@@ -213,44 +224,87 @@ class _TimelineScreenState extends State<TimelineScreen>
     });
   }
 
+  /// A jump far down (or up) a lazily laid-out list lands short: each frame
+  /// the list learns the real heights of a few more rows and corrects the
+  /// offset, so a jump homes in over several frames, up to this many.
+  static const _homingFrames = 60;
+
   /// Scrolls so [month]'s heading is at the top. A heading that isn't built
-  /// yet is guessed at by its share of the list, then homed in on once the
+  /// yet is guessed at from the rows that are, then homed in on once the
   /// list has laid out around the guess.
   Future<void> _jumpToMonth(int month) async {
     if (month < 0 || month >= _headingRows.length) return;
     final row = _headingRows[month];
-    for (var tries = 0; tries < 6; tries++) {
-      if (!mounted || !_scroll.hasClients) return;
+    final request = ++_scrollRequest;
+    for (var tries = 0; tries < _homingFrames; tries++) {
+      if (!mounted || !_scroll.hasClients || request != _scrollRequest) {
+        return;
+      }
       final context = _built[row];
       if (context != null && context.mounted) {
         await Scrollable.ensureVisible(context, alignment: 0);
         _scheduleSync();
         return;
       }
-      final position = _scroll.position;
-      final length = position.maxScrollExtent + position.viewportDimension;
-      final guess = (row / _items.length * length).clamp(
-        0.0,
-        position.maxScrollExtent,
-      );
+      final guess = _guessOffset(row);
+      if (guess == null) break;
       _scroll.jumpTo(guess);
       await WidgetsBinding.instance.endOfFrame;
     }
     _scheduleSync();
   }
 
+  /// Where [row] probably starts: as far past the built rows as it is in
+  /// rows, at their average height. Rows differ in height (a day with four
+  /// large photos is many headings tall), so it's a guess to home in from.
+  double? _guessOffset(int row) {
+    final list = _listKey.currentContext?.findRenderObject();
+    if (list is! RenderBox || !list.hasSize) return null;
+    final position = _scroll.position;
+    int? first, last;
+    var top = 0.0, bottom = 0.0;
+    for (final MapEntry(key: r, value: context) in _built.entries) {
+      if (!context.mounted) continue;
+      final box = context.findRenderObject();
+      if (box is! RenderBox || !box.hasSize || !box.attached) continue;
+      final y = box.localToGlobal(Offset.zero, ancestor: list).dy;
+      if (first == null || r < first) {
+        first = r;
+        top = y;
+      }
+      if (last == null || r > last) {
+        last = r;
+        bottom = y + box.size.height;
+      }
+    }
+    final double guess;
+    if (first == null) {
+      final length = position.maxScrollExtent + position.viewportDimension;
+      guess = row / _items.length * length;
+    } else {
+      final average = (bottom - top) / (last! - first + 1);
+      guess = position.pixels + top + (row - first) * average;
+    }
+    return guess.clamp(0.0, position.maxScrollExtent);
+  }
+
   /// Scrolls to [fraction] of the way down the list. How long the list is
   /// is only an estimate until it's laid out around the new spot, so the
-  /// jump is checked against the fresh estimate for a few frames.
-  void _seek(double fraction, {int tries = 4}) {
-    if (!mounted || !_scroll.hasClients) return;
+  /// jump is checked against the fresh estimate frame by frame while it
+  /// still gets closer.
+  void _seek(double fraction) =>
+      _seekAgain(fraction, ++_scrollRequest, _homingFrames, null);
+
+  void _seekAgain(double fraction, int request, int tries, double? was) {
+    if (!mounted || !_scroll.hasClients || request != _scrollRequest) return;
     final position = _scroll.position;
     final target = fraction * position.maxScrollExtent;
-    if ((position.pixels - target).abs() < 1) return;
+    final pixels = position.pixels;
+    if ((pixels - target).abs() < 1 || pixels == was) return;
     _scroll.jumpTo(target);
     if (tries > 1) {
       WidgetsBinding.instance.addPostFrameCallback(
-        (_) => _seek(fraction, tries: tries - 1),
+        (_) => _seekAgain(fraction, request, tries - 1, pixels),
       );
     }
   }
@@ -284,12 +338,7 @@ class _TimelineScreenState extends State<TimelineScreen>
         month = _items[row].month;
       }
     }
-    final current = month ?? 0;
-    if (current == _current && fraction == _fraction) return;
-    setState(() {
-      _current = current;
-      _fraction = fraction;
-    });
+    _rail.value = (month ?? 0, fraction);
   }
 
   @override
@@ -403,13 +452,16 @@ class _TimelineScreenState extends State<TimelineScreen>
           bottom: 10,
           width: _Rail.width,
           child: compactText(
-            _Rail(
-              months: _months,
-              thisYear: _today.year,
-              current: _current,
-              fraction: _fraction,
-              onSeek: _seek,
-              onJump: (month) => unawaited(_jumpToMonth(month)),
+            ValueListenableBuilder(
+              valueListenable: _rail,
+              builder: (context, rail, _) => _Rail(
+                months: _months,
+                thisYear: _today.year,
+                current: rail.$1,
+                fraction: rail.$2,
+                onSeek: _seek,
+                onJump: (month) => unawaited(_jumpToMonth(month)),
+              ),
             ),
           ),
         ),
@@ -421,13 +473,8 @@ class _TimelineScreenState extends State<TimelineScreen>
     final item = _items[row];
     final today = _today;
     Widget child = switch (item) {
-      _MonthHeading() => _MonthHeadingRow(
-        key: ValueKey(item.date),
-        month: item.date,
-        meals: item.meals,
-      ),
+      _MonthHeading() => _MonthHeadingRow(month: item.date, meals: item.meals),
       _DayItem() => _DayRow(
-        key: ValueKey(item.day),
         day: item.day,
         meals: item.meals,
         today: item.day == today,
@@ -444,7 +491,15 @@ class _TimelineScreenState extends State<TimelineScreen>
         child: child,
       );
     }
+    // Keyed by what the row shows, so a day keeps its element (and the
+    // rail's record of it) when a new month lands above it.
+    final key = switch (item) {
+      _MonthHeading() => ('month', item.date),
+      _DayItem() => ('day', item.day),
+      _EndCard() => ('end', item.first),
+    };
     return _Built(
+      key: ValueKey(key),
       row: row,
       onBuilt: (row, context) => _built[row] = context,
       onGone: (row, context) {
@@ -509,6 +564,7 @@ class _TimelineScreenState extends State<TimelineScreen>
 /// Tells the screen while this row is in the tree, so it can be found.
 class _Built extends StatefulWidget {
   const _Built({
+    super.key,
     required this.row,
     required this.onBuilt,
     required this.onGone,
@@ -678,14 +734,14 @@ class _SizerButton extends StatelessWidget {
 
 /// "October 2026 · 12 meals" (`.tl-month h2`).
 class _MonthHeadingRow extends StatelessWidget {
-  const _MonthHeadingRow({super.key, required this.month, required this.meals});
+  const _MonthHeadingRow({required this.month, required this.meals});
 
   final DateTime month;
   final int meals;
 
   @override
   Widget build(BuildContext context) {
-    final name = '${monthNames[month.month - 1]} ${month.year}';
+    final name = monthYear(month);
     return Semantics(
       header: true,
       label: '$name, ${plural(meals, 'meal')}',
@@ -719,7 +775,6 @@ class _MonthHeadingRow extends StatelessWidget {
 /// One day (`article`): its pill, then its photos as a grid or large cards.
 class _DayRow extends StatelessWidget {
   const _DayRow({
-    super.key,
     required this.day,
     required this.meals,
     required this.today,
@@ -977,6 +1032,12 @@ class _RailState extends State<_Rail> {
     widget.onSeek(_fractionAt(y, height));
   }
 
+  /// A drag that began on a mark skipped [_down]; it scrubs all the same.
+  void _start(DragStartDetails details, double height) {
+    if (!_dragging) setState(() => _dragging = true);
+    widget.onSeek(_fractionAt(details.localPosition.dy, height));
+  }
+
   void _end() {
     if (_dragging) setState(() => _dragging = false);
   }
@@ -985,8 +1046,7 @@ class _RailState extends State<_Rail> {
   Widget build(BuildContext context) {
     final current = widget.current.clamp(0, widget.months.length - 1);
     final month = widget.months[current];
-    String nameOf(int i) =>
-        '${monthNames[widget.months[i].month - 1]} ${widget.months[i].year}';
+    String nameOf(int i) => monthYear(widget.months[i]);
     final name = nameOf(current);
     final older = current < widget.months.length - 1;
     final newer = current > 0;
@@ -1006,6 +1066,7 @@ class _RailState extends State<_Rail> {
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onVerticalDragDown: (details) => _down(details, height),
+            onVerticalDragStart: (details) => _start(details, height),
             onVerticalDragUpdate: (details) =>
                 widget.onSeek(_fractionAt(details.localPosition.dy, height)),
             onVerticalDragEnd: (_) => _end(),
@@ -1071,10 +1132,7 @@ class _RailState extends State<_Rail> {
                           ],
                         ),
                         child: Text(
-                          monthNames[month.month - 1] +
-                              (month.year == widget.thisYear
-                                  ? ''
-                                  : ' ${month.year}'),
+                          monthYear(month, unless: widget.thisYear),
                           maxLines: 1,
                           style: PlatterText.head(
                             size: 16,
@@ -1106,7 +1164,7 @@ class _Mark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Jump to ${monthNames[month.month - 1]} ${month.year}',
+      label: 'Jump to ${monthYear(month)}',
       child: ExcludeSemantics(
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
